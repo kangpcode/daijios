@@ -4,7 +4,7 @@
   "modes": [
     {
       "name": "user",
-      "prompt_suffix": "\u003e ",
+      "prompt_suffix": "> ",
       "min_role": "readonly",
       "description": "Read-only operational inspection"
     },
@@ -18,11 +18,11 @@
       "name": "config",
       "prompt_suffix": "(cfg)# ",
       "min_role": "netadmin",
-      "description": "Transactional candidate configuration staging \u0026 commit"
+      "description": "Transactional candidate configuration staging & commit"
     },
     {
       "name": "sub-config",
-      "prompt_suffix": "(cfg:\u003cctx\u003e)# ",
+      "prompt_suffix": "(cfg:<ctx>)# ",
       "min_role": "netadmin",
       "description": "Scoped container sub-configuration mode"
     }
@@ -36,7 +36,7 @@
         "config",
         "sub-config"
       ],
-      "syntax": "show \u003cversion|about|running|candidate|startup|interfaces|revisions|audit-verify|sessions|wans|dot.path\u003e",
+      "syntax": "show <version|about|running|candidate|startup|interfaces|revisions|audit-verify|sessions|wans|dot.path>",
       "description": "Inspect operational state or configuration",
       "pipes_supported": [
         "include",
@@ -51,7 +51,7 @@
         "config",
         "sub-config"
       ],
-      "syntax": "set \u003cpath\u003e \u003cvalue\u003e",
+      "syntax": "set <path> <value>",
       "description": "Set candidate configuration value"
     },
     {
@@ -60,7 +60,7 @@
         "config",
         "sub-config"
       ],
-      "syntax": "unset \u003cpath\u003e",
+      "syntax": "unset <path>",
       "description": "Remove candidate configuration leaf or container"
     },
     {
@@ -69,7 +69,7 @@
         "config",
         "sub-config"
       ],
-      "syntax": "add \u003carray-path\u003e \u003celement\u003e",
+      "syntax": "add <array-path> <element>",
       "description": "Append element to list node"
     },
     {
@@ -78,7 +78,7 @@
         "config",
         "sub-config"
       ],
-      "syntax": "remove \u003carray-path\u003e \u003ckey|index\u003e",
+      "syntax": "remove <array-path> <key|index>",
       "description": "Remove element from list node"
     },
     {
@@ -103,7 +103,7 @@
         "sub-config"
       ],
       "syntax": "validate",
-      "description": "Validate candidate against SSoT JSON \u0026 semantic validators"
+      "description": "Validate candidate against SSoT JSON & semantic validators"
     },
     {
       "name": "commit",
@@ -144,7 +144,7 @@
         "config",
         "sub-config"
       ],
-      "syntax": "rollback \u003crev-id|offset\u003e [--commit]",
+      "syntax": "rollback <rev-id|offset> [--commit]",
       "description": "Restore configuration revision",
       "pipes_supported": [
         "json"
@@ -177,7 +177,7 @@
         "config",
         "sub-config"
       ],
-      "syntax": "monitor \u003ctraffic|torch|topic\u003e",
+      "syntax": "monitor <traffic|torch|topic>",
       "description": "Stream real-time diagnostic snapshot",
       "pipes_supported": [
         "include",
@@ -193,7 +193,7 @@
         "config",
         "sub-config"
       ],
-      "syntax": "debug \u003cconfig-tree|topic\u003e",
+      "syntax": "debug <config-tree|topic>",
       "description": "Run internal subsystem diagnostic probes",
       "pipes_supported": [
         "include",
@@ -210,7 +210,7 @@
         "config",
         "sub-config"
       ],
-      "syntax": "search \u003ckeyword\u003e",
+      "syntax": "search <keyword>",
       "description": "Fuzzy search schema paths and descriptions",
       "pipes_supported": [
         "include",
@@ -225,7 +225,7 @@
         "config",
         "sub-config"
       ],
-      "syntax": "enter \u003ccontainer-path\u003e",
+      "syntax": "enter <container-path>",
       "description": "Descend into sub-config container"
     },
     {
@@ -292,7 +292,7 @@
         "config",
         "sub-config"
       ],
-      "syntax": "unalias \u003cname\u003e",
+      "syntax": "unalias <name>",
       "description": "Delete a user command alias"
     },
     {
@@ -344,12 +344,12 @@
   "pipes": [
     {
       "op": "include",
-      "syntax": "| include \u003csubstring\u003e",
+      "syntax": "| include <substring>",
       "description": "Retain lines matching case-insensitive substring"
     },
     {
       "op": "exclude",
-      "syntax": "| exclude \u003csubstring\u003e",
+      "syntax": "| exclude <substring>",
       "description": "Drop lines matching case-insensitive substring"
     },
     {
@@ -373,21 +373,21 @@
       "impact": "service-restart"
     },
     {
-      "cli_path": "interfaces bonding \u003cname\u003e",
+      "cli_path": "interfaces bonding <name>",
       "config_path": "interfaces.bondings[*].name",
       "type": "string",
       "required": true,
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces bridge \u003cname\u003e",
+      "cli_path": "interfaces bridge <name>",
       "config_path": "interfaces.bridges[*].name",
       "type": "string",
       "required": true,
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces bridge \u003cname\u003e stp-mode",
+      "cli_path": "interfaces bridge <name> stp-mode",
       "config_path": "interfaces.bridges[*].stp_mode",
       "type": "string",
       "enum": [
@@ -401,28 +401,28 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces physical \u003cname\u003e",
+      "cli_path": "interfaces physical <name>",
       "config_path": "interfaces.physical[*].name",
       "type": "string",
       "required": true,
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces physical \u003cname\u003e address",
+      "cli_path": "interfaces physical <name> address",
       "config_path": "interfaces.physical[*].addresses",
       "type": "array",
       "required": false,
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces physical \u003cname\u003e description",
+      "cli_path": "interfaces physical <name> description",
       "config_path": "interfaces.physical[*].description",
       "type": "string",
       "required": false,
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces physical \u003cname\u003e duplex",
+      "cli_path": "interfaces physical <name> duplex",
       "config_path": "interfaces.physical[*].duplex",
       "type": "string",
       "enum": [
@@ -435,7 +435,7 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces physical \u003cname\u003e enabled",
+      "cli_path": "interfaces physical <name> enabled",
       "config_path": "interfaces.physical[*].enabled",
       "type": "boolean",
       "default": true,
@@ -443,7 +443,7 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces physical \u003cname\u003e mac",
+      "cli_path": "interfaces physical <name> mac",
       "config_path": "interfaces.physical[*].mac_override",
       "type": "string",
       "format": "mac",
@@ -451,7 +451,7 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces physical \u003cname\u003e mtu",
+      "cli_path": "interfaces physical <name> mtu",
       "config_path": "interfaces.physical[*].mtu",
       "type": "integer",
       "default": 1500,
@@ -459,7 +459,7 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces physical \u003cname\u003e role",
+      "cli_path": "interfaces physical <name> role",
       "config_path": "interfaces.physical[*].role",
       "type": "string",
       "enum": [
@@ -474,7 +474,7 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces physical \u003cname\u003e speed",
+      "cli_path": "interfaces physical <name> speed",
       "config_path": "interfaces.physical[*].speed_mbps",
       "type": "integer",
       "enum": [
@@ -493,21 +493,21 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces physical \u003cname\u003e vrf",
+      "cli_path": "interfaces physical <name> vrf",
       "config_path": "interfaces.physical[*].vrf",
       "type": "string",
       "required": false,
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces vlan \u003cname\u003e",
+      "cli_path": "interfaces vlan <name>",
       "config_path": "interfaces.vlans[*].name",
       "type": "string",
       "required": true,
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces vlan \u003cname\u003e protocol",
+      "cli_path": "interfaces vlan <name> protocol",
       "config_path": "interfaces.vlans[*].protocol",
       "type": "string",
       "enum": [
@@ -519,14 +519,14 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces vlan \u003cname\u003e vid",
+      "cli_path": "interfaces vlan <name> vid",
       "config_path": "interfaces.vlans[*].vid",
       "type": "integer",
       "required": true,
       "impact": "hot-reload"
     },
     {
-      "cli_path": "interfaces vrrp \u003cname\u003e auth-secret",
+      "cli_path": "interfaces vrrp <name> auth-secret",
       "config_path": "interfaces.vrrp[*].auth_secret",
       "type": "string",
       "required": false,
@@ -534,7 +534,7 @@
       "impact": "service-restart"
     },
     {
-      "cli_path": "ip dhcp server \u003cname\u003e",
+      "cli_path": "ip dhcp server <name>",
       "config_path": "ip.dhcp.servers[*].name",
       "type": "string",
       "required": true,
@@ -594,7 +594,7 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "isp profile \u003cname\u003e",
+      "cli_path": "isp profile <name>",
       "config_path": "isp.profiles[*].name",
       "type": "string",
       "required": true,
@@ -727,7 +727,7 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "routing bgp neighbor \u003cpeer\u003e password",
+      "cli_path": "routing bgp neighbor <peer> password",
       "config_path": "routing.bgp.neighbors[*].password",
       "type": "string",
       "required": false,
@@ -735,7 +735,7 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "routing ospf area \u003cid\u003e auth-key",
+      "cli_path": "routing ospf area <id> auth-key",
       "config_path": "routing.ospf.areas[*].auth_key",
       "type": "string",
       "required": false,
@@ -751,7 +751,7 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "routing vrf \u003cname\u003e",
+      "cli_path": "routing vrf <name>",
       "config_path": "routing.vrfs[*].name",
       "type": "string",
       "required": true,
@@ -880,14 +880,14 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "system users \u003cusername\u003e",
+      "cli_path": "system users <username>",
       "config_path": "system.users[*].username",
       "type": "string",
       "required": true,
       "impact": "hot-reload"
     },
     {
-      "cli_path": "system users \u003cusername\u003e enabled",
+      "cli_path": "system users <username> enabled",
       "config_path": "system.users[*].enabled",
       "type": "boolean",
       "default": true,
@@ -895,7 +895,7 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "system users \u003cusername\u003e mfa-required",
+      "cli_path": "system users <username> mfa-required",
       "config_path": "system.users[*].mfa_required",
       "type": "boolean",
       "default": false,
@@ -903,7 +903,7 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "system users \u003cusername\u003e password-hash",
+      "cli_path": "system users <username> password-hash",
       "config_path": "system.users[*].password_hash",
       "type": "string",
       "required": false,
@@ -912,7 +912,7 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "system users \u003cusername\u003e role",
+      "cli_path": "system users <username> role",
       "config_path": "system.users[*].role",
       "type": "string",
       "enum": [
@@ -928,7 +928,7 @@
       "impact": "hot-reload"
     },
     {
-      "cli_path": "system users \u003cusername\u003e ssh-key",
+      "cli_path": "system users <username> ssh-key",
       "config_path": "system.users[*].ssh_authorized_keys",
       "type": "array",
       "required": false,
@@ -959,7 +959,7 @@
       "impact": "service-restart"
     },
     {
-      "cli_path": "vpn wireguard \u003ciface\u003e private-key",
+      "cli_path": "vpn wireguard <iface> private-key",
       "config_path": "vpn.wireguard[*].private_key",
       "type": "string",
       "required": true,
@@ -983,14 +983,14 @@
       "impact": "service-restart"
     },
     {
-      "cli_path": "wireless ssid \u003cname\u003e",
+      "cli_path": "wireless ssid <name>",
       "config_path": "wireless.ssids[*].ssid",
       "type": "string",
       "required": true,
       "impact": "service-restart"
     },
     {
-      "cli_path": "wireless ssid \u003cname\u003e passphrase",
+      "cli_path": "wireless ssid <name> passphrase",
       "config_path": "wireless.ssids[*].passphrase",
       "type": "string",
       "required": false,
@@ -1847,7 +1847,7 @@
     },
     {
       "dot_path": "interfaces.bondings[*].name",
-      "cli_path": "interfaces bonding \u003cname\u003e",
+      "cli_path": "interfaces bonding <name>",
       "type": "string",
       "impact": "hot-reload"
     },
@@ -1957,7 +1957,7 @@
     },
     {
       "dot_path": "interfaces.bridges[*].name",
-      "cli_path": "interfaces bridge \u003cname\u003e",
+      "cli_path": "interfaces bridge <name>",
       "type": "string",
       "impact": "hot-reload"
     },
@@ -2080,7 +2080,7 @@
     },
     {
       "dot_path": "interfaces.bridges[*].stp_mode",
-      "cli_path": "interfaces bridge \u003cname\u003e stp-mode",
+      "cli_path": "interfaces bridge <name> stp-mode",
       "type": "string",
       "enum": [
         "none",
@@ -2128,7 +2128,7 @@
     },
     {
       "dot_path": "interfaces.physical[*].addresses",
-      "cli_path": "interfaces physical \u003cname\u003e address",
+      "cli_path": "interfaces physical <name> address",
       "type": "array",
       "impact": "hot-reload",
       "is_array": true
@@ -2140,13 +2140,13 @@
     },
     {
       "dot_path": "interfaces.physical[*].description",
-      "cli_path": "interfaces physical \u003cname\u003e description",
+      "cli_path": "interfaces physical <name> description",
       "type": "string",
       "impact": "hot-reload"
     },
     {
       "dot_path": "interfaces.physical[*].duplex",
-      "cli_path": "interfaces physical \u003cname\u003e duplex",
+      "cli_path": "interfaces physical <name> duplex",
       "type": "string",
       "enum": [
         "auto",
@@ -2158,34 +2158,34 @@
     },
     {
       "dot_path": "interfaces.physical[*].enabled",
-      "cli_path": "interfaces physical \u003cname\u003e enabled",
+      "cli_path": "interfaces physical <name> enabled",
       "type": "boolean",
       "default": true,
       "impact": "hot-reload"
     },
     {
       "dot_path": "interfaces.physical[*].mac_override",
-      "cli_path": "interfaces physical \u003cname\u003e mac",
+      "cli_path": "interfaces physical <name> mac",
       "type": "string",
       "format": "mac",
       "impact": "hot-reload"
     },
     {
       "dot_path": "interfaces.physical[*].mtu",
-      "cli_path": "interfaces physical \u003cname\u003e mtu",
+      "cli_path": "interfaces physical <name> mtu",
       "type": "integer",
       "default": 1500,
       "impact": "hot-reload"
     },
     {
       "dot_path": "interfaces.physical[*].name",
-      "cli_path": "interfaces physical \u003cname\u003e",
+      "cli_path": "interfaces physical <name>",
       "type": "string",
       "impact": "hot-reload"
     },
     {
       "dot_path": "interfaces.physical[*].role",
-      "cli_path": "interfaces physical \u003cname\u003e role",
+      "cli_path": "interfaces physical <name> role",
       "type": "string",
       "enum": [
         "mgmt",
@@ -2199,7 +2199,7 @@
     },
     {
       "dot_path": "interfaces.physical[*].speed_mbps",
-      "cli_path": "interfaces physical \u003cname\u003e speed",
+      "cli_path": "interfaces physical <name> speed",
       "type": "integer",
       "enum": [
         "0",
@@ -2217,7 +2217,7 @@
     },
     {
       "dot_path": "interfaces.physical[*].vrf",
-      "cli_path": "interfaces physical \u003cname\u003e vrf",
+      "cli_path": "interfaces physical <name> vrf",
       "type": "string",
       "impact": "hot-reload"
     },
@@ -2412,7 +2412,7 @@
     },
     {
       "dot_path": "interfaces.vlans[*].name",
-      "cli_path": "interfaces vlan \u003cname\u003e",
+      "cli_path": "interfaces vlan <name>",
       "type": "string",
       "impact": "hot-reload"
     },
@@ -2422,7 +2422,7 @@
     },
     {
       "dot_path": "interfaces.vlans[*].protocol",
-      "cli_path": "interfaces vlan \u003cname\u003e protocol",
+      "cli_path": "interfaces vlan <name> protocol",
       "type": "string",
       "enum": [
         "802.1q",
@@ -2437,7 +2437,7 @@
     },
     {
       "dot_path": "interfaces.vlans[*].vid",
-      "cli_path": "interfaces vlan \u003cname\u003e vid",
+      "cli_path": "interfaces vlan <name> vid",
       "type": "integer",
       "impact": "hot-reload"
     },
@@ -2474,7 +2474,7 @@
     },
     {
       "dot_path": "interfaces.vrrp[*].auth_secret",
-      "cli_path": "interfaces vrrp \u003cname\u003e auth-secret",
+      "cli_path": "interfaces vrrp <name> auth-secret",
       "type": "string",
       "secret": true,
       "impact": "service-restart"
@@ -2737,7 +2737,7 @@
     },
     {
       "dot_path": "ip.dhcp.servers[*].name",
-      "cli_path": "ip dhcp server \u003cname\u003e",
+      "cli_path": "ip dhcp server <name>",
       "type": "string",
       "impact": "service-restart"
     },
@@ -3648,7 +3648,7 @@
     },
     {
       "dot_path": "isp.profiles[*].name",
-      "cli_path": "isp profile \u003cname\u003e",
+      "cli_path": "isp profile <name>",
       "type": "string",
       "impact": "hot-reload"
     },
@@ -4333,7 +4333,7 @@
     },
     {
       "dot_path": "routing.bgp.neighbors[*].password",
-      "cli_path": "routing bgp neighbor \u003cpeer\u003e password",
+      "cli_path": "routing bgp neighbor <peer> password",
       "type": "string",
       "secret": true,
       "impact": "hot-reload"
@@ -4691,7 +4691,7 @@
     },
     {
       "dot_path": "routing.ospf.areas[*].auth_key",
-      "cli_path": "routing ospf area \u003cid\u003e auth-key",
+      "cli_path": "routing ospf area <id> auth-key",
       "type": "string",
       "secret": true,
       "impact": "hot-reload"
@@ -5043,7 +5043,7 @@
     },
     {
       "dot_path": "routing.vrfs[*].name",
-      "cli_path": "routing vrf \u003cname\u003e",
+      "cli_path": "routing vrf <name>",
       "type": "string",
       "impact": "hot-reload"
     },
@@ -5402,21 +5402,21 @@
     },
     {
       "dot_path": "system.users[*].enabled",
-      "cli_path": "system users \u003cusername\u003e enabled",
+      "cli_path": "system users <username> enabled",
       "type": "boolean",
       "default": true,
       "impact": "hot-reload"
     },
     {
       "dot_path": "system.users[*].mfa_required",
-      "cli_path": "system users \u003cusername\u003e mfa-required",
+      "cli_path": "system users <username> mfa-required",
       "type": "boolean",
       "default": false,
       "impact": "hot-reload"
     },
     {
       "dot_path": "system.users[*].password_hash",
-      "cli_path": "system users \u003cusername\u003e password-hash",
+      "cli_path": "system users <username> password-hash",
       "type": "string",
       "secret": true,
       "rbac": "superadmin",
@@ -5424,7 +5424,7 @@
     },
     {
       "dot_path": "system.users[*].role",
-      "cli_path": "system users \u003cusername\u003e role",
+      "cli_path": "system users <username> role",
       "type": "string",
       "enum": [
         "superadmin",
@@ -5439,7 +5439,7 @@
     },
     {
       "dot_path": "system.users[*].ssh_authorized_keys",
-      "cli_path": "system users \u003cusername\u003e ssh-key",
+      "cli_path": "system users <username> ssh-key",
       "type": "array",
       "impact": "hot-reload",
       "is_array": true
@@ -5450,7 +5450,7 @@
     },
     {
       "dot_path": "system.users[*].username",
-      "cli_path": "system users \u003cusername\u003e",
+      "cli_path": "system users <username>",
       "type": "string",
       "impact": "hot-reload"
     },
@@ -6301,7 +6301,7 @@
     },
     {
       "dot_path": "vpn.wireguard[*].private_key",
-      "cli_path": "vpn wireguard \u003ciface\u003e private-key",
+      "cli_path": "vpn wireguard <iface> private-key",
       "type": "string",
       "secret": true,
       "impact": "hot-reload"
@@ -6827,7 +6827,7 @@
     },
     {
       "dot_path": "wireless.ssids[*].passphrase",
-      "cli_path": "wireless ssid \u003cname\u003e passphrase",
+      "cli_path": "wireless ssid <name> passphrase",
       "type": "string",
       "secret": true,
       "impact": "service-restart"
@@ -6906,7 +6906,7 @@
     },
     {
       "dot_path": "wireless.ssids[*].ssid",
-      "cli_path": "wireless ssid \u003cname\u003e",
+      "cli_path": "wireless ssid <name>",
       "type": "string",
       "impact": "service-restart"
     },
