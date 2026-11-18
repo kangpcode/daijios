@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="daiji-dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DaiWeb — Embedded Real-Time Web Console for DaijiOS">
+  <title>DaiWeb — DaijiOS Management Console</title>
+  <link rel="stylesheet" href="/assets/tokens.css">
+  <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content" data-i18n="a11y.skip">Lewati ke konten utama</a>
+
+  <div class="daiji-shell">
+    <header class="daiji-topbar">
+      <div class="brand-lockup">
+        <button type="button" id="mobile-nav-toggle" class="btn mobile-menu-btn" aria-label="Buka menu navigasi" aria-expanded="false">☰</button>
+        <div class="brand-mark" aria-hidden="true">D</div>
+        <div>
+          <div class="brand-title">DaiWeb</div>
+          <div class="brand-sub" id="topbar-host">DaijiOS — Ecosystem by kangpcode</div>
+        </div>
+      </div>
+
+      <div class="topbar-controls">
+        <span id="ws-status" class="badge" aria-live="polite" data-i18n="status.connecting">Menghubungkan...</span>
+        <button type="button" id="lang-toggle" class="btn" aria-label="Ganti bahasa antara Indonesia dan Inggris">ID / EN</button>
+        <button type="button" id="theme-toggle" class="btn" aria-label="Ganti tema Gelap atau Terang" data-i18n="btn.theme">Tema</button>
+        <button type="button" id="logout-btn" class="btn hidden" data-i18n="btn.logout">Keluar</button>
+      </div>
+    </header>
+
+    <nav class="daiji-sidebar" id="sidebar-nav" aria-label="Navigasi utama">
+      <div role="tablist" aria-orientation="vertical">
+        <button type="button" role="tab" class="nav-btn" data-view="dashboard" aria-selected="true" aria-controls="view-dashboard" data-i18n="nav.dashboard">Dashboard Real-Time</button>
+        <button type="button" role="tab" class="nav-btn" data-view="topology" aria-selected="false" aria-controls="view-topology" data-i18n="nav.topology">Topologi Interaktif</button>
+        <button type="button" role="tab" class="nav-btn" data-view="wizards" aria-selected="false" aria-controls="view-wizards" data-i18n="nav.wizards">Wizard Konfigurasi</button>
+        <button type="button" role="tab" class="nav-btn" data-view="terminal" aria-selected="false" aria-controls="view-terminal" data-i18n="nav.terminal">Terminal CLI</button>
+        <button type="button" role="tab" class="nav-btn" data-view="config" aria-selected="false" aria-controls="view-config" data-i18n="nav.config">Skema Konfigurasi</button>
+      </div>
+    </nav>
+
+    <main id="main-content" class="daiji-main" tabindex="-1">
+      <section id="login-panel" class="panel" aria-labelledby="login-heading">
+        <h1 id="login-heading" class="panel-title" data-i18n="login.title">Masuk ke DaiWeb — DaijiOS</h1>
+        <p class="brand-sub" data-i18n="login.subtitle">Autentikasi RBAC &amp; proteksi brute-force aktif.</p>
+        <form id="login-form">
+          <div class="field">
+            <label for="login-user" data-i18n="login.user">Nama Pengguna</label>
+            <input id="login-user" name="username" class="input" type="text" autocomplete="username" required value="daijiadmin">
+          </div>
+          <div class="field">
+            <label for="login-pass" data-i18n="login.pass">Kata Sandi / Secret</label>
+            <input id="login-pass" name="password" class="input" type="password" autocomplete="current-password" required>
+          </div>
+          <div class="field">
+            <label for="login-totp" data-i18n="login.totp">Kode 2FA TOTP (Opsional)</label>
+            <input id="login-totp" name="totp" class="input" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="000000">
+          </div>
+          <button type="submit" class="btn btn-primary" data-i18n="login.submit">Masuk Konsol</button>
+          <p id="login-error" class="brand-sub" role="alert"></p>
+        </form>
+      </section>
+
+      <div id="app-views" class="hidden">
+        <!-- View 1: Dashboard Real-Time -->
+        <section id="view-dashboard" role="tabpanel" aria-labelledby="nav-dashboard-lbl">
+          <h1 id="nav-dashboard-lbl" class="sr-only" data-i18n="nav.dashboard">Dashboard Real-Time</h1>
+          <div class="kpi-grid">
+            <article class="kpi-card">
+              <div class="kpi-label" data-i18n="kpi.cpu">Beban CPU</div>
+              <div class="kpi-val mono" id="kpi-cpu">0.0%</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label" data-i18n="kpi.ram">Memori RAM</div>
+              <div class="kpi-val mono" id="kpi-ram">0 / 0 MB</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label" data-i18n="kpi.traffic">Trafik Rx / Tx</div>
+              <div class="kpi-val mono" id="kpi-traffic">0 / 0 Mbps</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label" data-i18n="kpi.sessions">Sesi Pelanggan</div>
+              <div class="kpi-val mono" id="kpi-sessions">0</div>
+            </article>
+            <article class="kpi-card warn" id="kpi-alarm-card">
+              <div class="kpi-label" data-i18n="kpi.alarms">Alarm Aktif</div>
+              <div class="kpi-val mono" id="kpi-alarms">0</div>
+            </article>
+          </div>
+
+          <div class="grid-2">
+            <section class="panel" aria-label="Grafik Telemetri Real-Time">
+              <div class="panel-head">
+                <h2 class="panel-title" data-i18n="dash.chart_title">Grafik Trafik &amp; CPU Real-Time (WebSocket)</h2>
+                <span class="badge ok mono" id="dash-uptime">up 0s</span>
+              </div>
+              <svg id="traffic-sparkline" class="sparkline-svg" viewBox="0 0 420 110" role="img" aria-label="Grafik garis CPU dan throughput Rx Tx"></svg>
+            </section>
+
+            <section class="panel" aria-label="Status Multi-WAN dan Alarm">
+              <div class="panel-head">
+                <h2 class="panel-title" data-i18n="dash.alarms_title">Alarm &amp; Log Peristiwa Terbaru</h2>
+                <button type="button" id="refresh-snapshot-btn" class="btn" data-i18n="btn.refresh">Muat Ulang</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th data-i18n="tbl.time">Waktu</th>
+                      <th data-i18n="tbl.level">Level</th>
+                      <th data-i18n="tbl.message">Pesan</th>
+                    </tr>
+                  </thead>
+                  <tbody id="logs-tbody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <!-- View 2: Interactive Topology -->
+        <section id="view-topology" class="hidden" role="tabpanel" aria-labelledby="topo-heading">
+          <div class="grid-2">
+            <section class="panel">
+              <div class="panel-head">
+                <h2 id="topo-heading" class="panel-title" data-i18n="topo.title">Topologi Jaringan &amp; Perangkat Interaktif</h2>
+                <button type="button" id="topo-reload-btn" class="btn" data-i18n="btn.refresh">Muat Ulang</button>
+              </div>
+              <svg id="topology-svg" class="topology-stage" viewBox="0 0 720 380" role="img" aria-label="Diagram topologi interaktif DaijiOS"></svg>
+            </section>
+            <aside class="panel" aria-live="polite">
+              <h2 class="panel-title" data-i18n="topo.inspector">Inspektor Node Terpilih</h2>
+              <pre id="topo-detail" class="mono" data-i18n="topo.hint">Klik simpul pada topologi untuk melihat detail interface, IP, status WAN, atau VPN peer.</pre>
+            </aside>
+          </div>
+        </section>
+
+        <!-- View 3: Guided Wizards -->
+        <section id="view-wizards" class="hidden" role="tabpanel" aria-labelledby="wiz-heading">
+          <section class="panel">
+            <div class="panel-head">
+              <h2 id="wiz-heading" class="panel-title" data-i18n="wiz.title">Wizard Konfigurasi Cepat (Dry-Run &amp; Commit Transaksional)</h2>
+            </div>
+            <div class="wizard-tabs" role="tablist" aria-label="Pilih Wizard">
+              <button type="button" class="btn btn-primary" data-wizard="wan">WAN</button>
+              <button type="button" class="btn" data-wizard="lan">LAN</button>
+              <button type="button" class="btn" data-wizard="pppoe">PPPoE</button>
+              <button type="button" class="btn" data-wizard="vpn">VPN WireGuard</button>
+              <button type="button" class="btn" data-wizard="firewall">Firewall</button>
+            </div>
+            <form id="wizard-form">
+              <div id="wizard-fields"></div>
+              <div class="topbar-controls">
+                <button type="button" id="wiz-preview-btn" class="btn" data-i18n="wiz.preview">Pratinjau Diff (Dry-Run)</button>
+                <button type="submit" class="btn btn-primary" data-i18n="wiz.apply">Terapkan &amp; Commit</button>
+              </div>
+            </form>
+            <pre id="wizard-output" class="mono" aria-live="polite"></pre>
+          </section>
+        </section>
+
+        <!-- View 4: Browser CLI Terminal -->
+        <section id="view-terminal" class="hidden" role="tabpanel" aria-labelledby="term-heading">
+          <section class="panel">
+            <div class="panel-head">
+              <h2 id="term-heading" class="panel-title" data-i18n="term.title">Terminal CLI Orisinal DaijiOS (WebSocket)</h2>
+              <span class="badge ok" data-i18n="term.tip">Ketik '?' untuk bantuan, Tab untuk pelengkapan</span>
+            </div>
+            <div class="terminal-box">
+              <pre id="term-output" class="terminal-log" aria-live="polite"></pre>
+              <div class="terminal-input-row">
+                <span id="term-prompt" class="terminal-prompt">daijiadmin@daiji&gt;</span>
+                <label for="term-input" class="sr-only" data-i18n="term.input_label">Baris perintah DaijiOS</label>
+                <input id="term-input" class="terminal-input" type="text" autocomplete="off" spellcheck="false" placeholder="show version">
+                <button type="button" id="term-send-btn" class="btn btn-primary" data-i18n="btn.run">Jalankan</button>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <!-- View 5: SSoT Schema Configuration -->
+        <section id="view-config" class="hidden" role="tabpanel" aria-labelledby="cfg-heading">
+          <section class="panel">
+            <div class="panel-head">
+              <h2 id="cfg-heading" class="panel-title" data-i18n="cfg.title">Penjelajah Skema SSoT (`x-daiji-ui`)</h2>
+              <button type="button" id="cfg-reload-btn" class="btn" data-i18n="btn.refresh">Muat Ulang</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Path</th>
+                    <th>Group</th>
+                    <th>Widget</th>
+                    <th>Impact</th>
+                    <th>RBAC</th>
+                  </tr>
+                </thead>
+                <tbody id="schema-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </div>
+    </main>
+
+    <footer class="daiji-footer">
+      <span>DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)</span>
+      <span class="mono" id="footer-version">DaiWeb v0.7.0-phase6</span>
+    </footer>
+  </div>
+
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>
