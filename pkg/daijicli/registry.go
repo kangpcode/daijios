@@ -103,6 +103,11 @@ func walkSchemaNode(cs *schema.CompiledSchema, n *schema.Node, dotPath string, r
 			return err
 		}
 	}
+	if eff.Items != nil && dotPath != "" {
+		if err := walkSchemaNode(cs, eff.Items, dotPath+"[*]", reg, depth+1); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
