@@ -29,6 +29,9 @@ import (
 	"github.com/kangpcode/daijios/pkg/secplan"
 	"github.com/kangpcode/daijios/pkg/secreconcile"
 	"github.com/kangpcode/daijios/pkg/sysinfo"
+	"github.com/kangpcode/daijios/pkg/wlanctrl"
+	"github.com/kangpcode/daijios/pkg/wlanplan"
+	"github.com/kangpcode/daijios/pkg/wlanreconcile"
 )
 
 func main() {
@@ -56,6 +59,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return cmdSec(args[1:], stdout, stderr)
 	case "isp":
 		return cmdISP(args[1:], stdout, stderr)
+	case "wlan":
+		return cmdWLAN(args[1:], stdout, stderr)
 	case "ab":
 		return cmdAB(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
@@ -77,6 +82,7 @@ func printUsage(w io.Writer) {
 		"  daiji-ctl net <plan|render-frr|render-kea|render-keepalived> --schema <path> --config <path>\n"+
 		"  daiji-ctl sec <render-nft|render-qos|render-vpn|audit-check> --schema <path> --config <path>\n"+
 		"  daiji-ctl isp <render-accel|render-mwan|render-snmp|run-script|bw-test> --schema <path> --config <path>\n"+
+		"  daiji-ctl wlan <render-hostapd|render-mesh|render-nft|rrm-solve> --schema <path> --config <path>\n"+
 		"  daiji-ctl ab status --state-dir <dir>\n",
 		sysinfo.BrandBanner,
 	)
@@ -203,7 +209,7 @@ func cmdConfig(args []string, stdout, stderr io.Writer) int {
 		BaseDir:           *storeDir,
 		Schema:            cs,
 		Migrator:          mig,
-		SemanticValidator: ispplan.ValidateAllSemantic,
+		SemanticValidator: wlanplan.ValidateAllSemantic,
 		BootstrapConfig:   boot,
 	})
 	if err != nil {
@@ -578,6 +584,71 @@ func cmdISP(args []string, stdout, stderr io.Writer) int {
 		return 1
 	default:
 		fmt.Fprintf(stderr, "unknown isp subcommand %q\n", sub)
+		return 2
+	}
+}
+
+func cmdWLAN(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 {
+		fmt.Fprintln(stderr, "wlan subcommand required: render-hostapd | render-mesh | render-nft | rrm-solve")
+		return 2
+	}
+	sub := args[0]
+	fs := flag.NewFlagSet("wlan "+sub, flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	schemaPath := fs.String("schema", "schema/daijios.schema.json", "path to DaijiOS schema")
+	configPath := fs.String("config", "schema/examples/campus-ac-config.json", "path to config JSON")
+	if err := fs.Parse(args[1:]); err != nil {
+		return 2
+	}
+	cs, err := schema.LoadFile(*schemaPath)
+	if err != nil {
+		fmt.Fprintf(stderr, "error loading schema: %v\n", err)
+		return 1
+	}
+	raw, err := os.ReadFile(*configPath)
+	if err != nil {
+		fmt.Fprintf(stderr, "error reading config: %v\n", err)
+		return 1
+	}
+	if err := cs.ValidateJSON(raw); err != nil {
+		fmt.Fprintf(stderr, "schema error: %v\n", err)
+		return 1
+	}
+	var cfgMap map[string]any
+	if err := json.Unmarshal(raw, &cfgMap); err != nil {
+		fmt.Fprintf(stderr, "json error: %v\n", err)
+		return 1
+	}
+	if err := wlanplan.ValidateAllSemantic(cfgMap); err != nil {
+		fmt.Fprintf(stderr, "semantic error: %v\n", err)
+		return 1
+	}
+	wCfg, err := wlanplan.ParseConfig(cfgMap)
+	if err != nil {
+		fmt.Fprintf(stderr, "parse error: %v\n", err)
+		return 1
+	}
+
+	switch sub {
+	case "render-hostapd":
+		fmt.Fprint(stdout, wlanreconcile.RenderHostapdConfig(&wCfg.Wireless, true))
+		return 0
+	case "render-mesh":
+		fmt.Fprint(stdout, wlanreconcile.RenderMeshConfig(&wCfg.Wireless, true))
+		return 0
+	case "render-nft":
+		fmt.Fprint(stdout, wlanreconcile.RenderWLANGuestNFT(&wCfg.Wireless))
+		return 0
+	case "rrm-solve":
+		var rf wlanplan.WLANRFProfile
+		if len(wCfg.Wireless.RFProfiles) > 0 {
+			rf = wCfg.Wireless.RFProfiles[0]
+		}
+		plans := wlanctrl.OptimizeRF(wCfg.Wireless.APs, rf, nil)
+		return writeJSONOut(stdout, plans)
+	default:
+		fmt.Fprintf(stderr, "unknown wlan subcommand %q\n", sub)
 		return 2
 	}
 }

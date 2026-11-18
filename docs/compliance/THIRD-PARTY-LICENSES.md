@@ -28,7 +28,8 @@
 | **Net-SNMP (`snmpd`)** | Agen monitoring SNMP v1/v2c/v3 (SHA256/AES128) | `BSD-like` | Fase 3 | Daemon terpisah dikontrol via `/etc/snmp/snmpd.conf` (`0600`). |
 | **rsyslog** | Pengumpul log sistem & forwarding TCP/TLS | `GPL-3.0-or-later` | Fase 3 | Daemon terpisah dikontrol via `/etc/rsyslog.d/99-daiji.conf`. |
 | **softflowd / IPFIX probe** | Ekspor flow NetFlow v5/v9/IPFIX | `BSD-2-Clause` | Fase 3 | Permissive; daemon terpisah dikontrol via `/etc/daiji/netflow.conf`. |
-| **hostapd / wpa_supplicant** | Wireless AP, WPA2/WPA3/Enterprise, Mesh, 802.11k/v/r | `BSD-3-Clause` | Fase 4 | Permissive; kontrol melalui `ctrl_iface` socket. |
+| **hostapd / wpa_supplicant** | Wireless AP, WPA2/WPA3/Enterprise, 802.11k/v/r, SAE Mesh | `BSD-3-Clause` | Fase 4 | Permissive; dikontrol via `/etc/hostapd/daiji.conf` (`0600`), `/etc/wpa_supplicant/daiji-mesh.conf` (`0600`), dan `ctrl_iface`. |
+| **iw (nl80211 CLI)** | Konfigurasi domain regulasi (`iw reg set`) & antarmuka mac80211 | `ISC` | Fase 4 | Permissive; dieksekusi sebagai utilitas terpisah via `wlanreconcile`. |
 | **OpenSSH** | Akses manajemen SSH & SFTP terenkripsi | `BSD` / `OpenSSH` | Fase 0–2 | Daemon sistem terpisah. |
 
 ## 2. Kebijakan Orisinalitas DaijiOS

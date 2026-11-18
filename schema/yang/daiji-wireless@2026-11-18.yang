@@ -1,0 +1,90 @@
+module daiji-wireless {
+  yang-version 1.1;
+  namespace "urn:daijios:params:xml:ns:yang:daiji-wireless";
+  prefix dwlan;
+
+  import daiji-isp {
+    prefix disp;
+    revision-date 2026-11-18;
+  }
+
+  organization
+    "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)";
+
+  description
+    "Phase 4 Wireless & Campus AC YANG model aligned 1:1 with schema/daijios.schema.json v1.4.0:
+     Wireless Controller (AC), AP groups, RF profiles (Auto-Channel/Auto-Power),
+     802.11k/v/r fast roaming, band steering, WPA2/WPA3/Enterprise/Captive Portal,
+     guest isolation, 802.11s/EasyMesh, and zero-touch AP onboarding.";
+
+  revision 2026-11-18 {
+    description "Initial Phase 4 wireless & campus controller model.";
+  }
+
+  container wireless {
+    container controller {
+      leaf enabled { type boolean; default false; }
+      leaf ac-name { type string; default "DaijiOS-AC"; }
+      leaf mode { type enumeration { enum local; enum hybrid; enum cloud; } default "local"; }
+      leaf country-code { type string { length "2"; } default "ID"; }
+      leaf dtls-enabled { type boolean; default true; }
+      leaf auto-adopt-policy {
+        type enumeration {
+          enum manual;
+          enum whitelist;
+          enum zero-touch-token;
+        }
+        default "zero-touch-token";
+      }
+    }
+
+    list ssids {
+      key "name";
+      leaf name { type string; }
+      leaf ssid { type string; mandatory true; }
+      leaf vlan-id { type uint16 { range "1..4094"; } }
+      leaf security-mode {
+        type enumeration {
+          enum open;
+          enum captive-portal;
+          enum wpa2-psk;
+          enum wpa3-sae;
+          enum wpa2-wpa3-mixed;
+          enum wpa2-enterprise;
+          enum wpa3-enterprise;
+        }
+      }
+      leaf enabled { type boolean; default true; }
+    }
+
+    list rf-profiles {
+      key "name";
+      leaf name { type string; }
+      leaf channel-width-2g { type uint8; default 20; }
+      leaf channel-width-5g { type uint8; default 80; }
+    }
+
+    list ap-groups {
+      key "name";
+      leaf name { type string; }
+      leaf rf-profile { type string; mandatory true; }
+      leaf-list ssids { type string; }
+    }
+
+    list aps {
+      key "mac";
+      leaf mac { type string; }
+      leaf name { type string; }
+      leaf ap-group { type string; }
+      leaf mesh-role { type enumeration { enum disabled; enum root; enum node; } default "disabled"; }
+      leaf enabled { type boolean; default true; }
+    }
+
+    container mesh {
+      leaf enabled { type boolean; default false; }
+      leaf mesh-id { type string; }
+      leaf protocol { type enumeration { enum 802.11s; enum daiji-easy-mesh; } default "802.11s"; }
+      leaf auto-heal { type boolean; default true; }
+    }
+  }
+}

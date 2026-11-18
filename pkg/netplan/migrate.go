@@ -13,7 +13,27 @@ func RegisterMigrations(m *configengine.Migrator) error {
 	if err := m.Register("1.1.0", "1.2.0", migrate110To120); err != nil {
 		return err
 	}
-	return m.Register("1.2.0", "1.3.0", migrate120To130)
+	if err := m.Register("1.2.0", "1.3.0", migrate120To130); err != nil {
+		return err
+	}
+	return m.Register("1.3.0", "1.4.0", migrate130To140)
+}
+
+func migrate130To140(cfg map[string]any) (map[string]any, error) {
+	if _, hasWLAN := cfg["wireless"]; !hasWLAN {
+		cfg["wireless"] = map[string]any{
+			"controller": map[string]any{
+				"enabled":           false,
+				"ac_name":           "DaijiOS-AC",
+				"mode":              "local",
+				"country_code":      "ID",
+				"control_port":      float64(5246),
+				"dtls_enabled":      true,
+				"auto_adopt_policy": "zero-touch-token",
+			},
+		}
+	}
+	return cfg, nil
 }
 
 func migrate120To130(cfg map[string]any) (map[string]any, error) {

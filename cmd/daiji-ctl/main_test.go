@@ -114,4 +114,14 @@ func TestCLIEndToEndPhase0(t *testing.T) {
 	if !strings.Contains(bwOut, "throughput_mbps") {
 		t.Fatalf("isp bw-test unexpected output: %s", bwOut)
 	}
+
+	acCfg := filepath.Join("..", "..", "schema", "examples", "campus-ac-config.json")
+	hapdOut := runCmd(0, "wlan", "render-hostapd", "--schema", schemaPath, "--config", acCfg)
+	if !strings.Contains(hapdOut, "ssid=DaijiCorp-Secure") || strings.Contains(hapdOut, "Daiji8021xRad2026!") {
+		t.Fatalf("wlan render-hostapd unexpected or leaked secret:\n%s", hapdOut)
+	}
+	rrmOut := runCmd(0, "wlan", "rrm-solve", "--schema", schemaPath, "--config", acCfg)
+	if !strings.Contains(rrmOut, "ap-lobby-root") {
+		t.Fatalf("wlan rrm-solve unexpected output:\n%s", rrmOut)
+	}
 }

@@ -137,14 +137,14 @@ func TestBackwardCompatibleMigration100To110(t *testing.T) {
 	if err := RegisterMigrations(mig); err != nil {
 		t.Fatal(err)
 	}
-	upgraded, steps, err := mig.Migrate(v100, "1.3.0")
+	upgraded, steps, err := mig.Migrate(v100, "1.4.0")
 	if err != nil {
-		t.Fatalf("Migrate 1.0.0->1.3.0 failed: %v", err)
+		t.Fatalf("Migrate 1.0.0->1.4.0 failed: %v", err)
 	}
-	if len(steps) != 3 || steps[0] != "1.0.0->1.1.0" || steps[1] != "1.1.0->1.2.0" || steps[2] != "1.2.0->1.3.0" {
+	if len(steps) != 4 || steps[0] != "1.0.0->1.1.0" || steps[3] != "1.3.0->1.4.0" {
 		t.Fatalf("unexpected migration steps: %v", steps)
 	}
 	if err := cs.Validate(upgraded); err != nil {
-		t.Fatalf("migrated config failed 1.3.0 schema validation: %v", err)
+		t.Fatalf("migrated config failed 1.4.0 schema validation: %v", err)
 	}
 }
