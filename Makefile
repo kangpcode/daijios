@@ -6,12 +6,14 @@ NETD := daiji-netd
 FWQOSD := daiji-fw-qosd
 ISPD := daiji-ispd
 AC := daiji-ac
+SH := daiji-sh
 PKG := ./cmd/daiji-ctl
 NETD_PKG := ./services/daiji-netd
 FWQOSD_PKG := ./services/daiji-fw-qosd
 ISPD_PKG := ./services/daiji-ispd
 AC_PKG := ./services/daiji-ac
-VERSION ?= 0.5.0-phase4
+SH_PKG := ./services/daiji-sh
+VERSION ?= 0.6.0-phase5
 LDFLAGS := -s -w -X github.com/kangpcode/daijios/pkg/sysinfo.Version=$(VERSION)
 
 .PHONY: all build test test-race bench vet check cross-build clean
@@ -24,6 +26,7 @@ build:
 	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(FWQOSD) $(FWQOSD_PKG)
 	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(ISPD) $(ISPD_PKG)
 	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(AC) $(AC_PKG)
+	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(SH) $(SH_PKG)
 
 test:
 	go test -v ./...
@@ -51,6 +54,7 @@ cross-build:
 		env CGO_ENABLED=0 GOOS=linux GOARCH=$$arch $$env_var go build -trimpath -ldflags "$(LDFLAGS)" -o bin/dist/$(FWQOSD)-linux-$$suffix $(FWQOSD_PKG) || exit 1; \
 		env CGO_ENABLED=0 GOOS=linux GOARCH=$$arch $$env_var go build -trimpath -ldflags "$(LDFLAGS)" -o bin/dist/$(ISPD)-linux-$$suffix $(ISPD_PKG) || exit 1; \
 		env CGO_ENABLED=0 GOOS=linux GOARCH=$$arch $$env_var go build -trimpath -ldflags "$(LDFLAGS)" -o bin/dist/$(AC)-linux-$$suffix $(AC_PKG) || exit 1; \
+		env CGO_ENABLED=0 GOOS=linux GOARCH=$$arch $$env_var go build -trimpath -ldflags "$(LDFLAGS)" -o bin/dist/$(SH)-linux-$$suffix $(SH_PKG) || exit 1; \
 	done
 	@ls -lh bin/dist/
 

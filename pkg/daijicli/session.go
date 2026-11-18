@@ -142,10 +142,14 @@ func (s *Session) Execute(ctx context.Context, rawLine string) (*CommandResult, 
 		hints := s.ContextualHelp(prefix)
 		var b strings.Builder
 		for _, h := range hints {
+			syntaxCol := h.Syntax
+			if h.Type != "" {
+				syntaxCol = fmt.Sprintf("%s <%s>", h.Syntax, h.Type)
+			}
 			if h.Impact != "" {
-				fmt.Fprintf(&b, "  %-34s [%-15s] %s\n", h.Syntax, h.Impact, h.Description)
+				fmt.Fprintf(&b, "  %-38s [%-15s] %s\n", syntaxCol, h.Impact, h.Description)
 			} else {
-				fmt.Fprintf(&b, "  %-34s %s\n", h.Syntax, h.Description)
+				fmt.Fprintf(&b, "  %-38s %s\n", syntaxCol, h.Description)
 			}
 		}
 		return &CommandResult{Output: strings.TrimRight(b.String(), "\n"), Structured: hints}, nil

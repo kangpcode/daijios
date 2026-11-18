@@ -19,6 +19,7 @@ import (
 
 	"github.com/kangpcode/daijios/pkg/abupdate"
 	"github.com/kangpcode/daijios/pkg/configengine"
+	"github.com/kangpcode/daijios/pkg/daijicli"
 	"github.com/kangpcode/daijios/pkg/daijiscript"
 	"github.com/kangpcode/daijios/pkg/ispplan"
 	"github.com/kangpcode/daijios/pkg/ispreconcile"
@@ -61,6 +62,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return cmdISP(args[1:], stdout, stderr)
 	case "wlan":
 		return cmdWLAN(args[1:], stdout, stderr)
+	case "cli":
+		return cmdCLI(args[1:], stdout, stderr)
 	case "ab":
 		return cmdAB(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
@@ -83,6 +86,7 @@ func printUsage(w io.Writer) {
 		"  daiji-ctl sec <render-nft|render-qos|render-vpn|audit-check> --schema <path> --config <path>\n"+
 		"  daiji-ctl isp <render-accel|render-mwan|render-snmp|run-script|bw-test> --schema <path> --config <path>\n"+
 		"  daiji-ctl wlan <render-hostapd|render-mesh|render-nft|rrm-solve> --schema <path> --config <path>\n"+
+		"  daiji-ctl cli <export-command-schema|search|exec> [flags]\n"+
 		"  daiji-ctl ab status --state-dir <dir>\n",
 		sysinfo.BrandBanner,
 	)
@@ -679,4 +683,107 @@ func writeJSONOut(w io.Writer, v any) int {
 		return 1
 	}
 	return 0
+}
+
+func cmdCLI(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 {
+		fmt.Fprintln(stderr, "cli subcommand required: export-command-schema | search | exec")
+		return 2
+	}
+	sub := args[0]
+	fs := flag.NewFlagSet("cli "+sub, flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	schemaPath := fs.String("schema", "schema/daijios.schema.json", "path to DaijiOS schema JSON")
+	storeDir := fs.String("store", "/var/lib/daiji/config", "config store directory")
+	actor := fs.String("actor", "daijiadmin", "operator username")
+	role := fs.String("role", "superadmin", "RBAC role")
+	cmdStr := fs.String("cmd", "", "semicolon-separated CLI commands to execute")
+	query := fs.String("q", "", "fuzzy search query")
+	limit := fs.Int("limit", 15, "max search hits")
+	jsonOut := fs.Bool("json", false, "output structured JSON")
+	if err := fs.Parse(args[1:]); err != nil {
+		return 2
+	}
+	cs, err := schema.LoadFile(*schemaPath)
+	if err != nil {
+		fmt.Fprintf(stderr, "error loading schema: %v\n", err)
+		return 1
+	}
+
+	switch sub {
+	case "export-command-schema":
+		doc, err := daijicli.BuildCommandSchema(cs)
+		if err != nil {
+			fmt.Fprintf(stderr, "build command schema error: %v\n", err)
+			return 1
+		}
+		return writeJSONOut(stdout, doc)
+
+	case "search":
+		if strings.TrimSpace(*query) == "" {
+			fmt.Fprintln(stderr, "--q is required")
+			return 2
+		}
+		reg, err := daijicli.BuildRegistry(cs)
+		if err != nil {
+			fmt.Fprintf(stderr, "build registry error: %v\n", err)
+			return 1
+		}
+		hits := reg.FuzzySearch(*query, *limit)
+		if *jsonOut {
+			return writeJSONOut(stdout, hits)
+		}
+		for _, h := range hits {
+			fmt.Fprintf(stdout, "%-45s (%s) score=%d %s\n", h.Path, h.Type, h.Score, h.Description)
+		}
+		return 0
+
+	case "exec":
+		if strings.TrimSpace(*cmdStr) == "" {
+			fmt.Fprintln(stderr, "--cmd is required")
+			return 2
+		}
+		mig := configengine.NewMigrator()
+		_ = netplan.RegisterMigrations(mig)
+		eng, err := configengine.Open(context.Background(), configengine.Options{
+			BaseDir:           *storeDir,
+			Schema:            cs,
+			Migrator:          mig,
+			SemanticValidator: wlanplan.ValidateAllSemantic,
+		})
+		if err != nil {
+			fmt.Fprintf(stderr, "open config engine failed: %v\n", err)
+			return 1
+		}
+		defer eng.Close()
+
+		sess, err := daijicli.NewSession(*actor, *role, eng, cs)
+		if err != nil {
+			fmt.Fprintf(stderr, "init session failed: %v\n", err)
+			return 1
+		}
+		for _, part := range strings.Split(*cmdStr, ";") {
+			line := strings.TrimSpace(part)
+			if line == "" {
+				continue
+			}
+			res, err := sess.Execute(context.Background(), line)
+			if err != nil {
+				fmt.Fprintf(stderr, "error: %v\n", err)
+				return 1
+			}
+			if *jsonOut && res.Structured != nil {
+				if writeJSONOut(stdout, res.Structured) != 0 {
+					return 1
+				}
+			} else if res.Output != "" {
+				fmt.Fprintln(stdout, res.Output)
+			}
+		}
+		return 0
+
+	default:
+		fmt.Fprintf(stderr, "unknown cli subcommand %q\n", sub)
+		return 2
+	}
 }

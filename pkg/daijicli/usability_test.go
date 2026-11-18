@@ -47,7 +47,7 @@ func TestCLIUsability20Tasks(t *testing.T) {
 		{"T17", "Validate candidate configuration", "validate", "valid"},
 		{"T18", "Atomically commit candidate changes", "commit usability-20-task", "Committed"},
 		{"T19", "Save running config to startup store", "save", "Saved running configuration"},
-		{"T20", "Verify JSON export after rollback", "rollback 1 --commit | json", "Rollback"},
+		{"T20", "Verify JSON export after rollback", "rollback 1 --commit | json", `"revision"`},
 	}
 
 	startAll := time.Now()

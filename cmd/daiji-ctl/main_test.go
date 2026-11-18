@@ -124,4 +124,17 @@ func TestCLIEndToEndPhase0(t *testing.T) {
 	if !strings.Contains(rrmOut, "ap-lobby-root") {
 		t.Fatalf("wlan rrm-solve unexpected output:\n%s", rrmOut)
 	}
+
+	cmdSchemaOut := runCmd(0, "cli", "export-command-schema", "--schema", schemaPath)
+	if !strings.Contains(cmdSchemaOut, `"schema_version": "1.4.0"`) || !strings.Contains(cmdSchemaOut, `"commit-confirm"`) {
+		t.Fatalf("cli export-command-schema unexpected output:\n%s", cmdSchemaOut)
+	}
+	searchOut := runCmd(0, "cli", "search", "--schema", schemaPath, "--q", "hostname", "--json")
+	if !strings.Contains(searchOut, "system.hostname") {
+		t.Fatalf("cli search unexpected output:\n%s", searchOut)
+	}
+	cliExecOut := runCmd(0, "cli", "exec", "--store", storeDir, "--schema", schemaPath, "--cmd", "enable; show revisions")
+	if !strings.Contains(cliExecOut, "rename via cli") {
+		t.Fatalf("cli exec unexpected output:\n%s", cliExecOut)
+	}
 }

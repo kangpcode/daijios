@@ -14,6 +14,7 @@ import (
 
 	"github.com/kangpcode/daijios/pkg/configengine"
 	"github.com/kangpcode/daijios/pkg/ispengine"
+	"github.com/kangpcode/daijios/pkg/ispplan"
 	"github.com/kangpcode/daijios/pkg/isptools"
 	"github.com/kangpcode/daijios/pkg/netplan"
 	"github.com/kangpcode/daijios/pkg/schema"
@@ -50,7 +51,7 @@ func loadTestEngine(t *testing.T) (*schema.CompiledSchema, *configengine.Engine)
 	if err != nil {
 		t.Fatalf("Open configengine: %v", err)
 	}
-	t.Cleanup(func() { _ = eng.Close() })
+	t.Cleanup(func() { eng.Close() })
 	return cs, eng
 }
 
@@ -189,7 +190,7 @@ func TestCompletionHelpFuzzyAliasHistoryPipes(t *testing.T) {
 	if res, err := sess.Execute(ctx, "set system.hostname ?"); err != nil || !strings.Contains(res.Output, "string") {
 		t.Fatalf("'set system.hostname ?' failed: %v output=%v", err, res)
 	}
-	if res, err := sess.Execute(ctx, "set updates.channel?"); err != nil || !strings.Contains(res.Output, "stable|beta|rc") {
+	if res, err := sess.Execute(ctx, "set updates.channel?"); err != nil || !strings.Contains(res.Output, "stable|lts|beta") {
 		t.Fatalf("'set updates.channel?' failed: %v output=%v", err, res)
 	}
 
@@ -253,24 +254,41 @@ func TestConfigLifecycleRollbackMonitorAndSubsystems(t *testing.T) {
 	}
 
 	// Attach live ISP subsystems so show sessions/wans and monitor traffic return structured data.
-	sess.Sessions = ispengine.NewSessionManager(10)
-	_ = sess.Sessions.StartSession(ispengine.SubscriberSession{
-		SessionID:  "ppp-101",
-		Username:   "cust1@daiji.isp",
-		Service:    "pppoe",
-		AssignedIP: "100.64.10.2",
-		StartedAt:  time.Now(),
-	})
-	sess.MultiWAN = ispengine.NewMultiWANMonitor([]ispengine.WANHealthState{
-		{Name: "wan-primary", Interface: "eth1", Gateway: "203.0.113.1", Up: true, LastRTTMS: 4.2},
-	})
-	sess.Torch = isptools.NewTorchAggregator()
-	sess.Torch.Record("192.168.88.10", "1.1.1.1", "UDP", 5353, 53, 64000, 100)
+	bngRaw, err := os.ReadFile(filepath.Join("..", "..", "schema", "examples", "isp-bng-config.json"))
+	if err != nil {
+		t.Fatalf("ReadFile bng: %v", err)
+	}
+	var bngMap map[string]any
+	if err := json.Unmarshal(bngRaw, &bngMap); err != nil {
+		t.Fatalf("Unmarshal bng: %v", err)
+	}
+	bngCfg, err := ispplan.ParseConfig(bngMap)
+	if err != nil {
+		t.Fatalf("ParseConfig bng: %v", err)
+	}
 
-	if res, err := sess.Execute(ctx, "show sessions"); err != nil || !strings.Contains(res.Output, "ppp-101") {
+	sess.Sessions = ispengine.NewSessionManager(&bngCfg.ISP)
+	if _, err := sess.Sessions.AuthenticatePPPoE("budi@fiber.daiji", "BudiPass2026!", "aa:bb:cc:11:22:33", time.Now()); err != nil {
+		t.Fatalf("AuthenticatePPPoE: %v", err)
+	}
+	sess.MultiWAN = ispengine.NewMultiWANMonitor(bngCfg.ISP.MultiWAN)
+	sess.MultiWAN.RecordProbe("wan-a", "1.1.1.1", 4.2, true)
+	sess.Torch = isptools.NewTorchAggregator()
+	sess.Torch.Ingest(isptools.FlowSample{
+		Timestamp: time.Now(),
+		SrcIP:     "192.168.88.10",
+		DstIP:     "1.1.1.1",
+		Protocol:  "UDP",
+		SrcPort:   5353,
+		DstPort:   53,
+		Bytes:     4096,
+		Tx:        true,
+	})
+
+	if res, err := sess.Execute(ctx, "show sessions"); err != nil || !strings.Contains(res.Output, "budi@fiber.daiji") {
 		t.Fatalf("show sessions failed: err=%v res=%+v", err, res)
 	}
-	if res, err := sess.Execute(ctx, "show wans"); err != nil || !strings.Contains(res.Output, "wan-primary") {
+	if res, err := sess.Execute(ctx, "show wans"); err != nil || !strings.Contains(res.Output, "wan-a") {
 		t.Fatalf("show wans failed: err=%v res=%+v", err, res)
 	}
 	if res, err := sess.Execute(ctx, "monitor traffic | json"); err != nil || !strings.Contains(res.Output, "192.168.88.10") {
