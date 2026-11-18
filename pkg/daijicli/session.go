@@ -136,9 +136,9 @@ func (s *Session) Execute(ctx context.Context, rawLine string) (*CommandResult, 
 		line = s.History[idx-1]
 	}
 
-	// Contextual '?' shortcut.
-	if line == "?" || strings.HasSuffix(line, " ?") || strings.HasSuffix(line, "?") {
-		prefix := strings.TrimSpace(strings.TrimSuffix(line, "?"))
+	// Contextual '?' shortcut (preserve space before '?' so `set ?` completes args).
+	if line == "?" || strings.HasSuffix(line, "?") {
+		prefix := strings.TrimLeft(strings.TrimSuffix(line, "?"), " \t")
 		hints := s.ContextualHelp(prefix)
 		var b strings.Builder
 		for _, h := range hints {
@@ -561,11 +561,18 @@ func (s *Session) cmdShow(args []string) (*CommandResult, error) {
 		}
 		return &CommandResult{Output: strings.TrimRight(b.String(), "\n"), Structured: snap}, nil
 	default:
-		// Support `show <dot.path>` directly from running config!
+		// Support `show <dot.path>` (and relative sub-config path) directly from running config.
 		run := s.Engine.GetRunning(true)
-		if val, ok := lookupDotPath(run, strings.Join(args, ".")); ok {
+		rawPath := strings.Join(args, ".")
+		if val, ok := lookupDotPath(run, rawPath); ok {
 			b, _ := json.MarshalIndent(val, "", "  ")
 			return &CommandResult{Output: string(b), Structured: val}, nil
+		}
+		if s.SubContext != "" {
+			if val, ok := lookupDotPath(run, s.resolvePath(rawPath)); ok {
+				b, _ := json.MarshalIndent(val, "", "  ")
+				return &CommandResult{Output: string(b), Structured: val}, nil
+			}
 		}
 		return nil, fmt.Errorf("unknown show target %q", strings.Join(args, " "))
 	}
@@ -818,9 +825,10 @@ func (s *Session) ContextualHelp(prefix string) []HelpHint {
 	if trimmed == "" {
 		return s.verbsForCurrentMode()
 	}
+	hasTrailingSpace := strings.HasSuffix(prefix, " ") || strings.HasSuffix(prefix, "\t")
 	toks := splitShellTokens(trimmed)
 	verb := strings.ToLower(toks[0])
-	if (verb == "set" || verb == "unset" || verb == "add" || verb == "remove" || verb == "enter") && len(toks) >= 2 {
+	if !hasTrailingSpace && (verb == "set" || verb == "unset" || verb == "add" || verb == "remove" || verb == "enter") && len(toks) >= 2 {
 		fullPath := s.resolvePath(toks[1])
 		if meta, ok := s.Registry.Nodes[fullPath]; ok {
 			desc := meta.Description

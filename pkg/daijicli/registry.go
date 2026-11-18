@@ -214,3 +214,103 @@ func subseqMatch(needle, hay string) bool {
 	}
 	return ni == len(needle)
 }
+
+// ModeSpec describes one interactive CLI hierarchy mode.
+type ModeSpec struct {
+	Name        Mode   `json:"name"`
+	Prompt      string `json:"prompt_suffix"`
+	MinRole     string `json:"min_role"`
+	Description string `json:"description"`
+}
+
+// VerbSpec defines one canonical DaijiOS CLI verb.
+type VerbSpec struct {
+	Name        string   `json:"name"`
+	Modes       []Mode   `json:"modes"`
+	Syntax      string   `json:"syntax"`
+	Description string   `json:"description"`
+	Pipes       []string `json:"pipes_supported,omitempty"`
+}
+
+// PipeSpec describes a post-processing output pipe operator.
+type PipeSpec struct {
+	Op          string `json:"op"`
+	Syntax      string `json:"syntax"`
+	Description string `json:"description"`
+}
+
+// CommandSchemaDocument represents the formal CLI command schema synced with SSoT.
+type CommandSchemaDocument struct {
+	Brand         string                  `json:"brand"`
+	SchemaVersion string                  `json:"schema_version"`
+	Modes         []ModeSpec              `json:"modes"`
+	Verbs         []VerbSpec              `json:"verbs"`
+	Pipes         []PipeSpec              `json:"pipes"`
+	CLIMappings   []schema.CLICommandSpec `json:"cli_mappings"`
+	PathCount     int                     `json:"path_count"`
+	Paths         []SchemaNodeMeta        `json:"paths"`
+}
+
+// BuildCommandSchema generates a deterministic CLI command schema synchronized with cs.
+func BuildCommandSchema(cs *schema.CompiledSchema) (*CommandSchemaDocument, error) {
+	reg, err := BuildRegistry(cs)
+	if err != nil {
+		return nil, err
+	}
+	cliSpecs, err := cs.ExtractCLISpec()
+	if err != nil {
+		return nil, err
+	}
+	nodes := make([]SchemaNodeMeta, 0, len(reg.Paths))
+	for _, p := range reg.Paths {
+		nodes = append(nodes, reg.Nodes[p])
+	}
+	return &CommandSchemaDocument{
+		Brand:         "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)",
+		SchemaVersion: cs.Root.SchemaVersion,
+		Modes: []ModeSpec{
+			{Name: ModeUser, Prompt: "> ", MinRole: "readonly", Description: "Read-only operational inspection"},
+			{Name: ModePrivileged, Prompt: "# ", MinRole: "operator", Description: "Privileged diagnostics, save, and configuration entry"},
+			{Name: ModeConfig, Prompt: "(cfg)# ", MinRole: "netadmin", Description: "Transactional candidate configuration staging & commit"},
+			{Name: ModeSubConfig, Prompt: "(cfg:<ctx>)# ", MinRole: "netadmin", Description: "Scoped container sub-configuration mode"},
+		},
+		Verbs: []VerbSpec{
+			{Name: "show", Modes: []Mode{ModeUser, ModePrivileged, ModeConfig, ModeSubConfig}, Syntax: "show <version|about|running|candidate|startup|interfaces|revisions|audit-verify|sessions|wans|dot.path>", Description: "Inspect operational state or configuration", Pipes: []string{"include", "exclude", "count", "json"}},
+			{Name: "set", Modes: []Mode{ModeConfig, ModeSubConfig}, Syntax: "set <path> <value>", Description: "Set candidate configuration value"},
+			{Name: "unset", Modes: []Mode{ModeConfig, ModeSubConfig}, Syntax: "unset <path>", Description: "Remove candidate configuration leaf or container"},
+			{Name: "add", Modes: []Mode{ModeConfig, ModeSubConfig}, Syntax: "add <array-path> <element>", Description: "Append element to list node"},
+			{Name: "remove", Modes: []Mode{ModeConfig, ModeSubConfig}, Syntax: "remove <array-path> <key|index>", Description: "Remove element from list node"},
+			{Name: "diff", Modes: []Mode{ModeConfig, ModeSubConfig}, Syntax: "diff", Description: "Show candidate vs running diff with secret redaction", Pipes: []string{"include", "exclude", "count", "json"}},
+			{Name: "validate", Modes: []Mode{ModeConfig, ModeSubConfig}, Syntax: "validate", Description: "Validate candidate against SSoT JSON & semantic validators"},
+			{Name: "commit", Modes: []Mode{ModeConfig, ModeSubConfig}, Syntax: "commit [message]", Description: "Atomically apply candidate to running config", Pipes: []string{"json"}},
+			{Name: "commit-confirm", Modes: []Mode{ModeConfig, ModeSubConfig}, Syntax: "commit-confirm [seconds]", Description: "Commit with deadman auto-rollback timer", Pipes: []string{"json"}},
+			{Name: "confirm", Modes: []Mode{ModeConfig, ModeSubConfig}, Syntax: "confirm", Description: "Disarm active commit-confirm timer"},
+			{Name: "rollback", Modes: []Mode{ModeConfig, ModeSubConfig}, Syntax: "rollback <rev-id|offset> [--commit]", Description: "Restore configuration revision", Pipes: []string{"json"}},
+			{Name: "discard", Modes: []Mode{ModeConfig, ModeSubConfig}, Syntax: "discard", Description: "Discard staged candidate edits"},
+			{Name: "save", Modes: []Mode{ModePrivileged, ModeConfig, ModeSubConfig}, Syntax: "save", Description: "Persist running configuration to startup"},
+			{Name: "monitor", Modes: []Mode{ModeUser, ModePrivileged, ModeConfig, ModeSubConfig}, Syntax: "monitor <traffic|torch|topic>", Description: "Stream real-time diagnostic snapshot", Pipes: []string{"include", "exclude", "count", "json"}},
+			{Name: "debug", Modes: []Mode{ModePrivileged, ModeConfig, ModeSubConfig}, Syntax: "debug <config-tree|topic>", Description: "Run internal subsystem diagnostic probes", Pipes: []string{"include", "exclude", "count", "json"}},
+			{Name: "search", Modes: []Mode{ModeUser, ModePrivileged, ModeConfig, ModeSubConfig}, Syntax: "search <keyword>", Description: "Fuzzy search schema paths and descriptions", Pipes: []string{"include", "exclude", "count", "json"}},
+			{Name: "enter", Modes: []Mode{ModeConfig, ModeSubConfig}, Syntax: "enter <container-path>", Description: "Descend into sub-config container"},
+			{Name: "up", Modes: []Mode{ModeSubConfig}, Syntax: "up", Description: "Move up one sub-config hierarchy level"},
+			{Name: "top", Modes: []Mode{ModeSubConfig}, Syntax: "top", Description: "Return directly to root config mode"},
+			{Name: "enable", Modes: []Mode{ModeUser}, Syntax: "enable", Description: "Elevate from user mode to privileged mode"},
+			{Name: "disable", Modes: []Mode{ModePrivileged}, Syntax: "disable", Description: "Drop from privileged mode to user mode"},
+			{Name: "config", Modes: []Mode{ModePrivileged}, Syntax: "config", Description: "Enter transactional configuration mode"},
+			{Name: "alias", Modes: []Mode{ModeUser, ModePrivileged, ModeConfig, ModeSubConfig}, Syntax: "alias [name command...]", Description: "List or define operator command aliases", Pipes: []string{"include", "count", "json"}},
+			{Name: "unalias", Modes: []Mode{ModeUser, ModePrivileged, ModeConfig, ModeSubConfig}, Syntax: "unalias <name>", Description: "Delete a user command alias"},
+			{Name: "history", Modes: []Mode{ModeUser, ModePrivileged, ModeConfig, ModeSubConfig}, Syntax: "history", Description: "Display session command history (secrets redacted)", Pipes: []string{"include", "exclude", "count", "json"}},
+			{Name: "help", Modes: []Mode{ModeUser, ModePrivileged, ModeConfig, ModeSubConfig}, Syntax: "help", Description: "Show available verbs for active mode", Pipes: []string{"include", "exclude", "count", "json"}},
+			{Name: "exit", Modes: []Mode{ModeUser, ModePrivileged, ModeConfig, ModeSubConfig}, Syntax: "exit", Description: "Step up mode hierarchy or exit session"},
+		},
+		Pipes: []PipeSpec{
+			{Op: "include", Syntax: "| include <substring>", Description: "Retain lines matching case-insensitive substring"},
+			{Op: "exclude", Syntax: "| exclude <substring>", Description: "Drop lines matching case-insensitive substring"},
+			{Op: "count", Syntax: "| count", Description: "Count non-empty output lines"},
+			{Op: "json", Syntax: "| json", Description: "Format command structured result as indented JSON"},
+		},
+		CLIMappings: cliSpecs,
+		PathCount:   len(nodes),
+		Paths:       nodes,
+	}, nil
+}
