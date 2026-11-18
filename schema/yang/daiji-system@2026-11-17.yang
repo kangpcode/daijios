@@ -1,0 +1,178 @@
+module daiji-system {
+  yang-version 1.1;
+  namespace "urn:daijios:params:xml:ns:yang:daiji-system";
+  prefix dsys;
+
+  organization
+    "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)";
+
+  contact
+    "kangpcode / Daiji Ecosystem Engineering";
+
+  description
+    "Phase 0 base YANG model aligned 1:1 with schema/daijios.schema.json
+     for NETCONF/RESTCONF interoperability and unified CLI/API/UI generation.";
+
+  revision 2026-11-17 {
+    description "Initial Phase 0 foundational system, management, and A/B update model.";
+  }
+
+  typedef hostname-type {
+    type string {
+      length "1..63";
+      pattern '[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?';
+    }
+  }
+
+  typedef port-type {
+    type uint16 {
+      range "1..65535";
+    }
+  }
+
+  typedef rbac-role {
+    type enumeration {
+      enum superadmin;
+      enum netadmin;
+      enum operator;
+      enum auditor;
+      enum readonly;
+    }
+  }
+
+  container daijios {
+    leaf schema-version {
+      type string;
+      default "1.0.0";
+      mandatory true;
+    }
+
+    container system {
+      leaf hostname {
+        type hostname-type;
+        default "daiji-router";
+        mandatory true;
+      }
+      leaf domain-name {
+        type string {
+          length "0..128";
+        }
+        default "local.daiji";
+      }
+      leaf timezone {
+        type string {
+          length "2..64";
+        }
+        default "UTC";
+        mandatory true;
+      }
+      leaf-list ntp-servers {
+        type string;
+      }
+      leaf motd-banner {
+        type string {
+          length "0..512";
+        }
+        default "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)";
+      }
+
+      container watchdog {
+        leaf enabled {
+          type boolean;
+          default true;
+        }
+        leaf timeout-sec {
+          type uint16 {
+            range "5..300";
+          }
+          default 30;
+        }
+        leaf max-failed-boots {
+          type uint8 {
+            range "1..10";
+          }
+          default 3;
+        }
+      }
+
+      list users {
+        key "username";
+        leaf username {
+          type string {
+            length "2..32";
+          }
+        }
+        leaf role {
+          type rbac-role;
+          default "readonly";
+        }
+        leaf password-hash {
+          type string;
+          description "Sensitive secret; automatically redacted in diff/audit views.";
+        }
+        leaf-list ssh-authorized-keys {
+          type string;
+        }
+        leaf mfa-required {
+          type boolean;
+          default false;
+        }
+        leaf enabled {
+          type boolean;
+          default true;
+        }
+      }
+    }
+
+    container management {
+      container ssh {
+        leaf enabled { type boolean; default true; }
+        leaf port { type port-type; default 22; }
+        leaf password-auth { type boolean; default false; }
+        leaf-list listen-addresses { type string; }
+      }
+      container api {
+        leaf enabled { type boolean; default true; }
+        leaf port { type port-type; default 8443; }
+        leaf tls-enabled { type boolean; default true; }
+        leaf signing-secret { type string; }
+      }
+      container daiweb {
+        leaf enabled { type boolean; default true; }
+        leaf port { type port-type; default 443; }
+        leaf theme {
+          type enumeration {
+            enum daiji-dark;
+            enum daiji-light;
+            enum system;
+          }
+          default "daiji-dark";
+        }
+      }
+      container cloud-link {
+        leaf enabled { type boolean; default false; }
+        leaf controller-url { type string; }
+        leaf enrollment-token { type string; }
+      }
+    }
+
+    container updates {
+      leaf channel {
+        type enumeration {
+          enum stable;
+          enum lts;
+          enum beta;
+        }
+        default "stable";
+      }
+      leaf auto-check { type boolean; default true; }
+      leaf require-signature { type boolean; default true; }
+      leaf confirm-timeout-sec {
+        type uint16 {
+          range "30..1800";
+        }
+        default 180;
+      }
+    }
+  }
+}

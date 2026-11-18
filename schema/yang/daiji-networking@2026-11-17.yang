@@ -1,0 +1,154 @@
+module daiji-networking {
+  yang-version 1.1;
+  namespace "urn:daijios:params:xml:ns:yang:daiji-networking";
+  prefix dnet;
+
+  import daiji-system {
+    prefix dsys;
+    revision-date 2026-11-17;
+  }
+
+  organization
+    "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)";
+
+  description
+    "Phase 1 Networking Core YANG model aligned 1:1 with schema/daijios.schema.json v1.1.0:
+     interfaces (Ethernet, 802.1Q/QinQ, bridge, LACP, VRRP, veth, tunnels),
+     IP services (DHCP, DNS, NTP, ARP/ND), Routing (VRF, PBR, ECMP, BFD, OSPF, BGP, RIP, IS-IS, MPLS/LDP),
+     and Switching (STP/RSTP/MSTP, IGMP/MLD snooping, mirroring, storm control, port security, LLDP).";
+
+  revision 2026-11-17 {
+    description "Initial Phase 1 networking core model.";
+  }
+
+  container interfaces {
+    list physical {
+      key "name";
+      leaf name { type string; }
+      leaf role {
+        type enumeration {
+          enum mgmt; enum wan; enum lan; enum trunk; enum unassigned;
+        }
+      }
+      leaf mtu { type uint16 { range "68..9216"; } default 1500; }
+      leaf vrf { type string; }
+      leaf-list addresses { type string; }
+      leaf enabled { type boolean; default true; }
+    }
+    list vlans {
+      key "name";
+      leaf name { type string; }
+      leaf parent { type string; mandatory true; }
+      leaf vid { type uint16 { range "1..4094"; } mandatory true; }
+      leaf protocol { type enumeration { enum 802.1q; enum 802.1ad; } default "802.1q"; }
+      leaf qinq-inner-vid { type uint16 { range "1..4094"; } }
+      leaf vrf { type string; }
+      leaf-list addresses { type string; }
+      leaf enabled { type boolean; default true; }
+    }
+    list bridges {
+      key "name";
+      leaf name { type string; }
+      leaf vlan-filtering { type boolean; default true; }
+      leaf stp-mode { type enumeration { enum none; enum stp; enum rstp; enum mstp; } default "rstp"; }
+      leaf igmp-snooping { type boolean; default true; }
+      leaf mld-snooping { type boolean; default true; }
+      leaf enabled { type boolean; default true; }
+    }
+    list bondings {
+      key "name";
+      leaf name { type string; }
+      leaf mode { type string; default "802.3ad"; }
+      leaf-list members { type string; }
+      leaf enabled { type boolean; default true; }
+    }
+    list vrrp {
+      key "name";
+      leaf name { type string; }
+      leaf interface { type string; }
+      leaf vrid { type uint8 { range "1..255"; } }
+      leaf priority { type uint8 { range "1..255"; } default 100; }
+      leaf-list virtual-ips { type string; }
+      leaf enabled { type boolean; default true; }
+    }
+    list veth {
+      key "name";
+      leaf name { type string; }
+      leaf peer { type string; }
+      leaf netns { type string; }
+      leaf enabled { type boolean; default true; }
+    }
+    list tunnels {
+      key "name";
+      leaf name { type string; }
+      leaf mode { type enumeration { enum gre; enum gretap; enum ipip; enum ip6gre; enum vxlan; enum sit; } }
+      leaf local-ip { type string; }
+      leaf remote-ip { type string; }
+      leaf vni { type uint32; }
+      leaf enabled { type boolean; default true; }
+    }
+  }
+
+  container ip {
+    leaf ipv4-forward { type boolean; default true; }
+    leaf ipv6-forward { type boolean; default true; }
+    leaf rp-filter { type uint8 { range "0..2"; } default 2; }
+    container dhcp {
+      list servers {
+        key "name";
+        leaf name { type string; }
+        leaf interface { type string; }
+        leaf subnet { type string; }
+        leaf range-start { type string; }
+        leaf range-end { type string; }
+        leaf enabled { type boolean; default true; }
+      }
+      list relays {
+        key "name";
+        leaf name { type string; }
+        leaf-list listen-interfaces { type string; }
+        leaf-list upstream-servers { type string; }
+        leaf enabled { type boolean; default true; }
+      }
+    }
+    container dns {
+      leaf enabled { type boolean; default true; }
+      leaf port { type dsys:port-type; default 53; }
+      leaf-list upstreams { type string; }
+    }
+  }
+
+  container routing {
+    list vrfs {
+      key "name";
+      leaf name { type string; }
+      leaf table-id { type uint32; }
+      leaf rd { type string; }
+      leaf-list interfaces { type string; }
+    }
+    container ospf {
+      leaf enabled { type boolean; default false; }
+      leaf router-id { type string; }
+    }
+    container bgp {
+      leaf enabled { type boolean; default false; }
+      leaf asn { type uint32; }
+      leaf router-id { type string; }
+      leaf ecmp-max-paths { type uint8 { range "1..64"; } default 4; }
+    }
+    container isis {
+      leaf enabled { type boolean; default false; }
+      leaf net-id { type string; }
+    }
+    container mpls {
+      leaf enabled { type boolean; default false; }
+    }
+  }
+
+  container switching {
+    container lldp {
+      leaf enabled { type boolean; default true; }
+      leaf tx-interval-sec { type uint16; default 30; }
+    }
+  }
+}

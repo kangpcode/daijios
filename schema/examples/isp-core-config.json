@@ -1,0 +1,258 @@
+{
+  "schema_version": "1.2.0",
+  "system": {
+    "hostname": "daiji-bng-jkt-01",
+    "domain_name": "core.daiji.net.id",
+    "timezone": "Asia/Jakarta",
+    "ntp_servers": ["0.id.pool.ntp.org", "1.id.pool.ntp.org"],
+    "motd_banner": "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)",
+    "watchdog": { "enabled": true, "timeout_sec": 30, "max_failed_boots": 3 },
+    "users": [
+      {
+        "username": "netadmin",
+        "role": "superadmin",
+        "password_hash": "$argon2id$v=19$m=65536,t=3,p=2$c2FsdHNhbHQ$9Z2V9Y2F0c2VjcmV0aGFzaA",
+        "mfa_required": true,
+        "enabled": true
+      }
+    ]
+  },
+  "management": {
+    "ssh": { "enabled": true, "port": 22, "password_auth": false, "listen_addresses": ["10.255.0.1"] },
+    "api": { "enabled": true, "port": 8443, "tls_enabled": true },
+    "daiweb": { "enabled": true, "port": 443, "theme": "daiji-dark" },
+    "cloud_link": { "enabled": false }
+  },
+  "interfaces": {
+    "physical": [
+      { "name": "eth0", "description": "OOB Mgmt", "role": "mgmt", "mtu": 1500, "addresses": ["10.255.0.1/24"], "enabled": true },
+      { "name": "eth1", "description": "Uplink Carrier A", "role": "wan", "mtu": 9000, "enabled": true },
+      { "name": "eth2", "description": "Uplink Carrier B", "role": "wan", "mtu": 9000, "enabled": true },
+      { "name": "eth3", "description": "Access Trunk", "role": "trunk", "mtu": 1500, "enabled": true },
+      { "name": "eth4", "description": "SPAN Mirror Monitor", "role": "lan", "mtu": 1500, "enabled": true }
+    ],
+    "bondings": [
+      {
+        "name": "bond0",
+        "mode": "802.3ad",
+        "lacp_rate": "fast",
+        "xmit_hash_policy": "layer3+4",
+        "members": ["eth1", "eth2"],
+        "mtu": 9000,
+        "addresses": ["10.10.0.1/30", "2001:db8:10::1/64"],
+        "enabled": true
+      }
+    ],
+    "vlans": [
+      {
+        "name": "vlan100",
+        "parent": "bond0",
+        "vid": 100,
+        "protocol": "802.1q",
+        "mtu": 1500,
+        "vrf": "vrf-cust",
+        "addresses": ["172.16.100.1/24"],
+        "enabled": true
+      },
+      {
+        "name": "qinq2000",
+        "parent": "eth3",
+        "vid": 2000,
+        "protocol": "802.1ad",
+        "qinq_inner_vid": 200,
+        "mtu": 1500,
+        "enabled": true
+      }
+    ],
+    "bridges": [
+      {
+        "name": "br-campus",
+        "vlan_filtering": true,
+        "stp_mode": "mstp",
+        "stp_priority": 4096,
+        "igmp_snooping": true,
+        "mld_snooping": true,
+        "addresses": ["192.168.50.1/24"],
+        "ports": [
+          {
+            "interface": "eth3",
+            "pvid": 10,
+            "tagged_vids": [10, 20],
+            "untagged_vids": [10],
+            "edge_port": false,
+            "bpdu_guard": true,
+            "storm_control": { "broadcast_pps": 5000, "multicast_pps": 5000, "unknown_unicast_pps": 10000 },
+            "port_security": { "enabled": true, "max_macs": 4, "violation_action": "restrict", "static_macs": ["00:11:22:33:44:55"] }
+          }
+        ],
+        "mirror": { "enabled": true, "source_ports": ["eth3"], "dest_port": "eth4", "direction": "both" },
+        "enabled": true
+      }
+    ],
+    "vrrp": [
+      {
+        "name": "vrrp-lan",
+        "interface": "br-campus",
+        "vrid": 50,
+        "priority": 150,
+        "virtual_ips": ["192.168.50.254/24"],
+        "preempt": true,
+        "advert_int_ms": 1000,
+        "auth_type": "pass",
+        "auth_secret": "daijiVrrpKey2026",
+        "track_interfaces": ["bond0"],
+        "enabled": true
+      }
+    ],
+    "veth": [
+      { "name": "veth-svc0", "peer": "veth-svc1", "mtu": 1500, "addresses": ["169.254.1.1/30"], "enabled": true }
+    ],
+    "tunnels": [
+      {
+        "name": "vxlan100",
+        "mode": "vxlan",
+        "local_ip": "10.10.0.1",
+        "remote_ip": "10.10.0.2",
+        "dev": "bond0",
+        "vni": 10010,
+        "dst_port": 4789,
+        "mtu": 1450,
+        "addresses": ["10.200.0.1/30"],
+        "enabled": true
+      }
+    ]
+  },
+  "ip": {
+    "ipv4_forward": true,
+    "ipv6_forward": true,
+    "rp_filter": 2,
+    "arp_static": [
+      { "ip": "10.10.0.2", "mac": "aa:bb:cc:dd:ee:02", "interface": "bond0" }
+    ],
+    "dhcp": {
+      "servers": [
+        {
+          "name": "campus-pool",
+          "interface": "br-campus",
+          "subnet": "192.168.50.0/24",
+          "range_start": "192.168.50.100",
+          "range_end": "192.168.50.200",
+          "gateway": "192.168.50.254",
+          "dns_servers": ["192.168.50.1"],
+          "domain_name": "campus.daiji.local",
+          "lease_time_sec": 3600,
+          "static_leases": [{ "mac": "00:11:22:33:44:55", "ip": "192.168.50.10", "hostname": "ap-lobby" }],
+          "enabled": true
+        }
+      ],
+      "clients": [{ "interface": "eth0", "dhcpv4": false, "dhcpv6_pd": false }],
+      "relays": [{ "name": "cust-relay", "listen_interfaces": ["vlan100"], "upstream_servers": ["10.255.0.10"], "circuit_id": true, "enabled": true }]
+    },
+    "dns": {
+      "enabled": true,
+      "listen_addresses": ["192.168.50.1"],
+      "port": 53,
+      "upstreams": ["1.1.1.1", "9.9.9.9"],
+      "cache_size": 8192,
+      "dnssec": true,
+      "local_domain": "campus.daiji.local",
+      "static_hosts": [{ "hostname": "gw.campus.daiji.local", "ip": "192.168.50.1" }]
+    },
+    "ntp": {
+      "enabled": true,
+      "servers": ["0.id.pool.ntp.org", "1.id.pool.ntp.org"],
+      "server_mode": true,
+      "allow_subnets": ["192.168.50.0/24"]
+    }
+  },
+  "routing": {
+    "vrfs": [
+      { "name": "vrf-cust", "table_id": 100, "rd": "65100:100", "interfaces": ["vlan100"], "description": "Enterprise Customer VRF" }
+    ],
+    "static_routes": [
+      {
+        "prefix": "0.0.0.0/0",
+        "distance": 1,
+        "ecmp_hops": [
+          { "next_hop": "10.10.0.2", "interface": "bond0", "weight": 2 },
+          { "next_hop": "10.200.0.2", "interface": "vxlan100", "weight": 1 }
+        ],
+        "enabled": true
+      }
+    ],
+    "policy_routes": [
+      { "priority": 100, "src_prefix": "172.16.100.0/24", "table_id": 100, "action": "lookup" }
+    ],
+    "bfd": [
+      { "name": "bfd-core", "peer_ip": "10.10.0.2", "interface": "bond0", "min_tx_ms": 100, "min_rx_ms": 100, "detect_multiplier": 3 }
+    ],
+    "ospf": {
+      "enabled": true,
+      "router_id": "10.255.0.1",
+      "bfd": true,
+      "redistribute": ["connected", "static"],
+      "passive_interfaces": ["br-campus"],
+      "areas": [
+        { "area_id": "0.0.0.0", "area_type": "normal", "networks": ["10.10.0.0/30", "192.168.50.0/24"] }
+      ]
+    },
+    "ospfv3": {
+      "enabled": true,
+      "router_id": "10.255.0.1",
+      "areas": [{ "area_id": "0.0.0.0", "interfaces": ["bond0"] }]
+    },
+    "bgp": {
+      "enabled": true,
+      "asn": 65100,
+      "router_id": "10.255.0.1",
+      "ecmp_max_paths": 4,
+      "graceful_restart": true,
+      "networks": ["192.168.50.0/24"],
+      "prefix_lists": [
+        {
+          "name": "ALLOW-OUT",
+          "rules": [{ "seq": 10, "action": "permit", "prefix": "192.168.50.0/24", "ge": 24, "le": 24 }]
+        }
+      ],
+      "route_maps": [
+        {
+          "name": "RM-ISP-OUT",
+          "entries": [{ "seq": 10, "action": "permit", "match_prefix_list": "ALLOW-OUT", "set_local_pref": 200, "set_community": "65100:100" }]
+        }
+      ],
+      "neighbors": [
+        {
+          "peer_ip": "10.10.0.2",
+          "remote_asn": 65200,
+          "description": "Upstream Transit",
+          "bfd": true,
+          "send_community": true,
+          "route_map_out": "RM-ISP-OUT",
+          "password": "bgpPeerSecret2026"
+        }
+      ]
+    },
+    "rip": { "enabled": false, "version": 2 },
+    "isis": {
+      "enabled": true,
+      "net_id": "49.0001.0102.5500.0001.00",
+      "level": "level-2-only",
+      "interfaces": [{ "name": "bond0", "metric": 10, "bfd": true }]
+    },
+    "mpls": {
+      "enabled": true,
+      "label_range_min": 16,
+      "label_range_max": 1048575,
+      "ldp": { "enabled": true, "router_id": "10.255.0.1", "transport_ip": "10.255.0.1", "interfaces": ["bond0"] }
+    }
+  },
+  "switching": {
+    "lldp": { "enabled": true, "tx_interval_sec": 30, "tx_hold": 4, "cdp_compat": true, "med_enabled": true, "interfaces": ["eth3", "bond0"] }
+  },
+  "updates": {
+    "channel": "stable",
+    "auto_check": true,
+    "require_signature": true,
+    "confirm_timeout_sec": 180
+  }
+}

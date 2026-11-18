@@ -1,0 +1,185 @@
+{
+  "schema_version": "1.2.0",
+  "system": {
+    "hostname": "daiji-sec-gw-01",
+    "domain_name": "sec.daiji.net.id",
+    "timezone": "Asia/Jakarta",
+    "ntp_servers": ["0.id.pool.ntp.org"],
+    "motd_banner": "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)",
+    "watchdog": { "enabled": true, "timeout_sec": 30, "max_failed_boots": 3 },
+    "users": [
+      {
+        "username": "secadmin",
+        "role": "superadmin",
+        "password_hash": "$argon2id$v=19$m=65536,t=3,p=2$c2FsdHNhbHQ$9Z2V9Y2F0c2VjcmV0aGFzaA",
+        "mfa_required": true,
+        "enabled": true
+      }
+    ]
+  },
+  "management": {
+    "ssh": { "enabled": true, "port": 2222, "password_auth": false, "listen_addresses": ["10.255.0.1"] },
+    "api": { "enabled": true, "port": 8443, "tls_enabled": true, "signing_secret": "DaijiAPISecretKey2026UltraSafe" },
+    "daiweb": { "enabled": true, "port": 443, "theme": "daiji-dark" }
+  },
+  "interfaces": {
+    "physical": [
+      { "name": "eth0", "description": "WAN Fiber", "role": "wan", "mtu": 1500, "addresses": ["203.0.113.2/30"], "enabled": true },
+      { "name": "eth1", "description": "LAN Core", "role": "lan", "mtu": 1500, "addresses": ["192.168.10.1/24"], "enabled": true }
+    ],
+    "bridges": [
+      {
+        "name": "br-lan",
+        "vlan_filtering": true,
+        "stp_mode": "rstp",
+        "ports": [
+          {
+            "interface": "eth1",
+            "pvid": 1,
+            "port_security": { "enabled": true, "max_macs": 8, "violation_action": "restrict", "static_macs": ["00:11:22:33:44:55"] }
+          }
+        ],
+        "enabled": true
+      }
+    ]
+  },
+  "firewall": {
+    "default_policy": { "input": "drop", "forward": "drop", "output": "accept" },
+    "conntrack": { "max_entries": 524288, "tcp_established_timeout_sec": 3600, "udp_timeout_sec": 120, "syn_flood_protect": true, "syn_rate_per_sec": 300, "log_invalid": true },
+    "address_lists": [
+      {
+        "name": "mgmt_trusted",
+        "family": "ipv4",
+        "entries": [{ "cidr": "10.255.0.0/24", "comment": "NOC Subnet" }]
+      },
+      {
+        "name": "blacklist_temp",
+        "family": "ipv4",
+        "entries": [{ "cidr": "198.51.100.44/32", "comment": "Scanner", "timeout_sec": 3600 }]
+      }
+    ],
+    "l7_dpi": {
+      "enabled": true,
+      "engine": "nft-l7",
+      "blocked_categories": ["p2p-torrent"],
+      "custom_signatures": [
+        { "name": "bittorrent-dht", "protocol": "udp", "port_hints": [6881], "payload_regex": "d1:ad2:id20:", "mark": 701, "action": "mark" }
+      ]
+    },
+    "filter_rules": [
+      { "id": "allow-mgmt-ssh", "chain": "input", "order": 10, "protocol": "tcp", "src_list": "mgmt_trusted", "dst_port": "2222", "conn_state": ["new"], "action": "accept", "enabled": true },
+      { "id": "allow-wg-udp", "chain": "input", "order": 15, "protocol": "udp", "in_interface": "eth0", "dst_port": "51820", "action": "accept", "enabled": true },
+      { "id": "drop-dpi-torrent", "chain": "forward", "order": 20, "mark_match": 701, "action": "drop", "log": true, "log_prefix": "DAIJI-DPI-DROP ", "enabled": true },
+      { "id": "allow-lan-out", "chain": "forward", "order": 30, "in_interface": "br-lan", "out_interface": "eth0", "action": "accept", "enabled": true }
+    ],
+    "nat_rules": [
+      { "id": "wan-masq", "type": "masquerade", "order": 10, "out_interface": "eth0", "src_ip": "192.168.10.0/24", "enabled": true },
+      { "id": "web-dnat", "type": "dnat", "order": 20, "in_interface": "eth0", "protocol": "tcp", "dst_port": 8080, "to_addresses": "192.168.10.50", "to_port": 80, "enabled": true }
+    ],
+    "mangle_rules": [
+      { "id": "clamp-mss", "chain": "forward", "order": 5, "mss_clamp_pmtu": true, "enabled": true },
+      { "id": "mark-voip", "chain": "prerouting", "order": 10, "protocol": "udp", "dst_port": "5060", "set_mark": 10, "set_dscp": 46, "enabled": true }
+    ]
+  },
+  "qos": {
+    "interfaces": [
+      { "interface": "eth0", "scheduler": "htb", "download_kbps": 1000000, "upload_kbps": 500000, "overhead_bytes": 18, "rtt_ms": 50, "nat_mode": true, "diffserv": "diffserv4" }
+    ],
+    "queue_trees": [
+      { "name": "voip-prio", "parent_interface": "eth0", "class_id": 10, "mark_match": 10, "rate_kbps": 50000, "ceil_kbps": 100000, "burst_bytes": 65536, "priority": 1, "qdisc": "cake" }
+    ],
+    "simple_queues": [
+      { "name": "paket-50m", "target_cidr": "192.168.10.0/24", "interface": "eth1", "max_upload_kbps": 50000, "max_download_kbps": 50000, "burst_upload_kbps": 75000, "burst_download_kbps": 75000, "burst_time_sec": 8, "pcq_mode": true, "pcq_rate_kbps": 10000, "enabled": true }
+    ]
+  },
+  "vpn": {
+    "wireguard": [
+      {
+        "interface": "wg0",
+        "listen_port": 51820,
+        "private_key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+        "addresses": ["10.99.0.1/24"],
+        "mtu": 1420,
+        "peers": [
+          {
+            "name": "branch-bdg",
+            "public_key": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
+            "preshared_key": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=",
+            "allowed_ips": ["10.99.0.2/32", "192.168.20.0/24"],
+            "endpoint": "198.51.100.10:51820",
+            "persistent_keepalive": 25
+          }
+        ],
+        "enabled": true
+      }
+    ],
+    "ipsec": {
+      "enabled": true,
+      "charon_threads": 4,
+      "tunnels": [
+        {
+          "name": "dc-ikev2",
+          "version": "ikev2",
+          "local_ip": "203.0.113.2",
+          "remote_ip": "198.51.100.20",
+          "auth_method": "psk",
+          "psk": "DaijiIPsecStrongKey2026!",
+          "local_ts": ["192.168.10.0/24"],
+          "remote_ts": ["10.40.0.0/16"],
+          "vti_interface": "vti0",
+          "vti_key": 100,
+          "enabled": true
+        }
+      ]
+    },
+    "openvpn": [
+      {
+        "name": "roadwarrior",
+        "role": "server",
+        "proto": "udp",
+        "port": 1194,
+        "dev_type": "tun",
+        "cipher": "AES-256-GCM",
+        "subnet": "10.88.0.0/24",
+        "ca_cert": "/etc/daiji/pki/ca.crt",
+        "cert": "/etc/daiji/pki/server.crt",
+        "private_key_path": "/etc/daiji/pki/server.key",
+        "enabled": true
+      }
+    ],
+    "l2tp": { "enabled": true, "listen_ip": "203.0.113.2", "ipsec_psk": "DaijiL2TPSharedKey2026!", "local_ip": "10.77.0.1", "client_pool": "10.77.0.0/24" },
+    "pptp": { "enabled": false, "legacy_acknowledged": false, "require_mppe128": true },
+    "sstp": { "enabled": true, "listen_port": 8444, "cert_path": "/etc/daiji/pki/sstp.crt", "private_key_path": "/etc/daiji/pki/sstp.key", "client_pool": "10.78.0.0/24" },
+    "eoip": [
+      { "name": "eoip-dc", "local_ip": "203.0.113.2", "remote_ip": "198.51.100.20", "tunnel_id": 101, "mtu": 1450, "bridge": "br-lan", "enabled": true }
+    ]
+  },
+  "security": {
+    "rbac": { "enforce": true, "default_role": "readonly" },
+    "two_factor": { "enforce_for_admins": true, "issuer": "DaijiOS", "window_skew": 1 },
+    "ssh_hardening": {
+      "permit_root_login": false,
+      "max_auth_tries": 3,
+      "idle_timeout_sec": 300,
+      "allow_ciphers": ["chacha20-poly1305@openssh.com", "aes256-gcm@openssh.com"],
+      "allow_kex": ["sntrup761x25519-sha512@openssh.com", "curve25519-sha256"]
+    },
+    "api_tokens": { "max_ttl_hours": 168, "require_scoped_permissions": true },
+    "bruteforce": {
+      "enabled": true,
+      "ssh_max_attempts": 5,
+      "ssh_window_sec": 300,
+      "api_max_attempts": 10,
+      "api_window_sec": 300,
+      "ban_duration_sec": 3600,
+      "whitelist_cidrs": ["127.0.0.0/8", "10.255.0.0/24"]
+    },
+    "firmware_security": {
+      "secure_boot_required": true,
+      "require_signed_dpk": true,
+      "require_signed_ab": true,
+      "audit_log_immutable": true
+    }
+  },
+  "updates": { "channel": "stable", "auto_check": true, "require_signature": true, "confirm_timeout_sec": 180 }
+}

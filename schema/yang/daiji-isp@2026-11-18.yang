@@ -1,0 +1,137 @@
+module daiji-isp {
+  yang-version 1.1;
+  namespace "urn:daijios:params:xml:ns:yang:daiji-isp";
+  prefix disp;
+
+  import daiji-security {
+    prefix dsec;
+    revision-date 2026-11-17;
+  }
+
+  organization
+    "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)";
+
+  description
+    "Phase 3 ISP Features YANG model aligned 1:1 with schema/daijios.schema.json v1.3.0:
+     PPPoE, IPoE, Hotspot (captive portal/voucher), RADIUS AAA & CoA,
+     Multi-WAN load balancing & recursive failover, Telemetry (IPFIX/SNMP/Syslog),
+     and DaijiScript automation/scheduler/webhooks.";
+
+  revision 2026-11-18 {
+    description "Initial Phase 3 ISP, telemetry, and automation model.";
+  }
+
+  container isp {
+    list profiles {
+      key "name";
+      leaf name { type string; }
+      leaf download-kbps { type uint32; mandatory true; }
+      leaf upload-kbps { type uint32; mandatory true; }
+      leaf address-pool { type string; }
+      leaf expired-pool { type string; }
+    }
+    list ip-pools {
+      key "name";
+      leaf name { type string; }
+      leaf-list ranges { type string; }
+    }
+    container pppoe {
+      list servers {
+        key "name";
+        leaf name { type string; }
+        leaf interface { type string; }
+        leaf local-ip { type string; }
+        leaf ip-pool { type string; }
+        leaf use-radius { type boolean; default true; }
+        leaf enabled { type boolean; default true; }
+      }
+      list secrets {
+        key "username";
+        leaf username { type string; }
+        leaf profile { type string; }
+        leaf caller-mac { type string; }
+        leaf expires-at { type string; }
+        leaf disabled { type boolean; default false; }
+      }
+    }
+    container hotspot {
+      list servers {
+        key "name";
+        leaf name { type string; }
+        leaf interface { type string; }
+        leaf address-pool { type string; }
+        leaf dns-name { type string; }
+        leaf enabled { type boolean; default true; }
+      }
+      list vouchers {
+        key "code";
+        leaf code { type string; }
+        leaf profile { type string; }
+        leaf validity-sec { type uint32; }
+      }
+    }
+    container multi-wan {
+      leaf enabled { type boolean; default false; }
+      leaf mode {
+        type enumeration {
+          enum failover;
+          enum load-balance-pcc;
+          enum load-balance-ecmp;
+        }
+        default "failover";
+      }
+      list wans {
+        key "name";
+        leaf name { type string; }
+        leaf interface { type string; }
+        leaf gateway { type string; }
+        leaf weight { type uint8; default 1; }
+        leaf check-method {
+          type enumeration {
+            enum recursive;
+            enum netwatch-icmp;
+            enum http;
+          }
+          default "recursive";
+        }
+        leaf enabled { type boolean; default true; }
+      }
+    }
+  }
+
+  container telemetry {
+    container netflow {
+      leaf enabled { type boolean; default false; }
+      leaf version { type enumeration { enum netflow-v5; enum netflow-v9; enum ipfix; } default "ipfix"; }
+    }
+    container snmp {
+      leaf enabled { type boolean; default false; }
+      leaf version { type enumeration { enum v1; enum v2c; enum v3; } default "v3"; }
+    }
+    container syslog {
+      leaf enabled { type boolean; default true; }
+    }
+  }
+
+  container automation {
+    list scripts {
+      key "name";
+      leaf name { type string; }
+      leaf source { type string; }
+      leaf enabled { type boolean; default true; }
+    }
+    list schedules {
+      key "name";
+      leaf name { type string; }
+      leaf script-name { type string; }
+      leaf interval-sec { type uint32; }
+      leaf enabled { type boolean; default true; }
+    }
+    list webhooks {
+      key "name";
+      leaf name { type string; }
+      leaf url { type string; }
+      leaf enabled { type boolean; default true; }
+    }
+  }
+}

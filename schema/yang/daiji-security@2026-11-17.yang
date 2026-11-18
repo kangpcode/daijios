@@ -1,0 +1,125 @@
+module daiji-security {
+  yang-version 1.1;
+  namespace "urn:daijios:params:xml:ns:yang:daiji-security";
+  prefix dsec;
+
+  import daiji-networking {
+    prefix dnet;
+    revision-date 2026-11-17;
+  }
+
+  organization
+    "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)";
+
+  description
+    "Phase 2 Firewall (nftables filter/NAT/mangle/DPI), QoS (HTB/CAKE/fq_codel/PCQ),
+     VPN (WireGuard, IPsec IKEv2, OpenVPN, L2TP, PPTP, SSTP, EoIP), and Security Hardening YANG model.";
+
+  revision 2026-11-17 {
+    description "Initial Phase 2 firewall, QoS, VPN, and hardening model.";
+  }
+
+  container firewall {
+    container default-policy {
+      leaf input { type enumeration { enum accept; enum drop; } default "drop"; }
+      leaf forward { type enumeration { enum accept; enum drop; } default "drop"; }
+      leaf output { type enumeration { enum accept; enum drop; } default "accept"; }
+    }
+    list address-lists {
+      key "name";
+      leaf name { type string; }
+      leaf family { type enumeration { enum ipv4; enum ipv6; } default "ipv4"; }
+    }
+    container l7-dpi {
+      leaf enabled { type boolean; default false; }
+      leaf engine { type enumeration { enum ndpi; enum nft-l7; } default "nft-l7"; }
+    }
+    list filter-rules {
+      key "id";
+      leaf id { type string; }
+      leaf chain { type enumeration { enum input; enum forward; enum output; } }
+      leaf order { type uint16; }
+      leaf action { type enumeration { enum accept; enum drop; enum reject; enum log; } }
+      leaf enabled { type boolean; default true; }
+    }
+    list nat-rules {
+      key "id";
+      leaf id { type string; }
+      leaf type { type enumeration { enum masquerade; enum snat; enum dnat; enum redirect; } }
+      leaf order { type uint16; }
+      leaf enabled { type boolean; default true; }
+    }
+    list mangle-rules {
+      key "id";
+      leaf id { type string; }
+      leaf chain { type enumeration { enum prerouting; enum forward; enum postrouting; enum output; } }
+      leaf set-mark { type uint32; }
+      leaf set-dscp { type uint8; }
+      leaf mss-clamp-pmtu { type boolean; default false; }
+      leaf enabled { type boolean; default true; }
+    }
+  }
+
+  container qos {
+    list interfaces {
+      key "interface";
+      leaf interface { type string; }
+      leaf scheduler { type enumeration { enum htb; enum cake; enum fq_codel; } default "cake"; }
+      leaf download-kbps { type uint32; }
+      leaf upload-kbps { type uint32; }
+    }
+    list simple-queues {
+      key "name";
+      leaf name { type string; }
+      leaf target-cidr { type string; }
+      leaf max-upload-kbps { type uint32; }
+      leaf max-download-kbps { type uint32; }
+      leaf pcq-mode { type boolean; default false; }
+      leaf enabled { type boolean; default true; }
+    }
+  }
+
+  container vpn {
+    list wireguard {
+      key "interface";
+      leaf interface { type string; }
+      leaf listen-port { type uint16; }
+      leaf enabled { type boolean; default true; }
+    }
+    container ipsec {
+      leaf enabled { type boolean; default false; }
+      leaf charon-threads { type uint8; default 4; }
+    }
+    list openvpn {
+      key "name";
+      leaf name { type string; }
+      leaf role { type enumeration { enum server; enum client; } }
+      leaf port { type uint16; default 1194; }
+      leaf enabled { type boolean; default true; }
+    }
+    list eoip {
+      key "name";
+      leaf name { type string; }
+      leaf tunnel-id { type uint16; }
+      leaf enabled { type boolean; default true; }
+    }
+  }
+
+  container security {
+    container rbac {
+      leaf enforce { type boolean; default true; }
+    }
+    container two-factor {
+      leaf enforce-for-admins { type boolean; default true; }
+    }
+    container bruteforce {
+      leaf enabled { type boolean; default true; }
+      leaf ban-duration-sec { type uint32; default 3600; }
+    }
+    container firmware-security {
+      leaf secure-boot-required { type boolean; default true; }
+      leaf require-signed-dpk { type boolean; default true; }
+      leaf require-signed-ab { type boolean; default true; }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)
+
+Copyright (c) 2026 kangpcode (Dhafa Nazula Permadi). All rights reserved.
+
+This repository contains the architecture, specifications, schemas, control/management
+plane components, and documentation for the Daiji Ecosystem (DaijiOS, DaiWeb, Daimo,
+DaiDesk, DaijiCloud, DaijiACS, DaijiBilling, DaijiPortal).
+
+Phase 0 core reference libraries under pkg/ and cmd/ are provided under the
+Apache License, Version 2.0 (SPDX-License-Identifier: Apache-2.0) unless
+otherwise noted in file headers.
+
+Third-party open-source system components integrated into DaijiOS images
+(such as the Linux Kernel, FRRouting, nftables, WireGuard, strongSwan, Kea,
+FreeRADIUS, hostapd, musl, and s6) remain under their respective upstream
+licenses. See docs/compliance/THIRD-PARTY-LICENSES.md for the complete notice
+and compliance boundary documentation.

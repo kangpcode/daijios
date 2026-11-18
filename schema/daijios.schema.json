@@ -1,0 +1,2024 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.daijios.dev/v1/daijios.schema.json",
+  "title": "DaijiOS Unified Configuration Schema",
+  "description": "Single Source of Truth configuration schema for DaijiOS CLI, DaiWeb, Daimo, DaiDesk, REST/gRPC API, and DaijiCloud.",
+  "x-daiji-schema-version": "1.3.0",
+  "x-daiji-yang-module": "daiji-isp@2026-11-18",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "system",
+    "management",
+    "updates"
+  ],
+  "$defs": {
+    "PortNumber": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535
+    },
+    "InterfaceName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 15,
+      "pattern": "^[a-zA-Z][a-zA-Z0-9._-]{0,14}$"
+    },
+    "VlanID": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4094
+    },
+    "MTUBytes": {
+      "type": "integer",
+      "minimum": 68,
+      "maximum": 9216,
+      "default": 1500
+    },
+    "IPAddr": {
+      "type": "string",
+      "format": "ip"
+    },
+    "IPv4Addr": {
+      "type": "string",
+      "format": "ipv4"
+    },
+    "CIDR": {
+      "type": "string",
+      "format": "cidr"
+    },
+    "CIDR4": {
+      "type": "string",
+      "format": "cidr4"
+    },
+    "MACAddr": {
+      "type": "string",
+      "format": "mac"
+    },
+    "UserEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["username", "role", "enabled"],
+      "properties": {
+        "username": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32,
+          "pattern": "^[a-z_][a-z0-9_-]{1,31}$",
+          "x-daiji-cli": "system users <username>",
+          "x-daiji-ui": { "group": "Users", "widget": "text", "label": "Username" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["superadmin", "netadmin", "operator", "auditor", "readonly"],
+          "default": "readonly",
+          "x-daiji-cli": "system users <username> role",
+          "x-daiji-ui": { "group": "Users", "widget": "select", "label": "RBAC Role" },
+          "x-daiji-rbac": "superadmin",
+          "x-daiji-impact": "hot-reload"
+        },
+        "password_hash": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 256,
+          "x-daiji-secret": true,
+          "x-daiji-cli": "system users <username> password-hash",
+          "x-daiji-ui": { "group": "Users", "widget": "password", "label": "Password" },
+          "x-daiji-rbac": "superadmin",
+          "x-daiji-impact": "hot-reload"
+        },
+        "ssh_authorized_keys": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 20, "maxLength": 4096 },
+          "x-daiji-cli": "system users <username> ssh-key",
+          "x-daiji-ui": { "group": "Users", "widget": "textarea", "label": "SSH Public Keys" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "mfa_required": {
+          "type": "boolean",
+          "default": false,
+          "x-daiji-cli": "system users <username> mfa-required",
+          "x-daiji-ui": { "group": "Users", "widget": "switch", "label": "Require 2FA/TOTP" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "x-daiji-cli": "system users <username> enabled",
+          "x-daiji-ui": { "group": "Users", "widget": "switch", "label": "Account Enabled" },
+          "x-daiji-impact": "hot-reload"
+        }
+      }
+    },
+    "InterfacePhysical": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "role", "enabled"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/InterfaceName",
+          "x-daiji-cli": "interfaces physical <name>",
+          "x-daiji-ui": { "group": "Interfaces/Physical", "widget": "text", "label": "Interface Name" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 128,
+          "x-daiji-cli": "interfaces physical <name> description",
+          "x-daiji-ui": { "group": "Interfaces/Physical", "widget": "text", "label": "Description" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["mgmt", "wan", "lan", "trunk", "unassigned"],
+          "default": "unassigned",
+          "x-daiji-cli": "interfaces physical <name> role",
+          "x-daiji-ui": { "group": "Interfaces/Physical", "widget": "select", "label": "Plane Role" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "mtu": {
+          "$ref": "#/$defs/MTUBytes",
+          "x-daiji-cli": "interfaces physical <name> mtu",
+          "x-daiji-ui": { "group": "Interfaces/Physical", "widget": "number", "label": "MTU (bytes)" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "speed_mbps": {
+          "type": "integer",
+          "enum": [0, 10, 100, 1000, 2500, 10000, 25000, 40000, 100000],
+          "default": 0,
+          "x-daiji-cli": "interfaces physical <name> speed",
+          "x-daiji-ui": { "group": "Interfaces/Physical", "widget": "select", "label": "Link Speed (0=Auto)" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "duplex": {
+          "type": "string",
+          "enum": ["auto", "full", "half"],
+          "default": "auto",
+          "x-daiji-cli": "interfaces physical <name> duplex",
+          "x-daiji-ui": { "group": "Interfaces/Physical", "widget": "select", "label": "Duplex" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "mac_override": {
+          "$ref": "#/$defs/MACAddr",
+          "x-daiji-cli": "interfaces physical <name> mac",
+          "x-daiji-ui": { "group": "Interfaces/Physical", "widget": "text", "label": "Custom MAC" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "vrf": {
+          "type": "string",
+          "maxLength": 15,
+          "x-daiji-cli": "interfaces physical <name> vrf",
+          "x-daiji-ui": { "group": "Interfaces/Physical", "widget": "text", "label": "VRF" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "addresses": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CIDR" },
+          "x-daiji-cli": "interfaces physical <name> address",
+          "x-daiji-ui": { "group": "Interfaces/Physical", "widget": "cidr-list", "label": "IPv4/IPv6 Addresses" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "x-daiji-cli": "interfaces physical <name> enabled",
+          "x-daiji-ui": { "group": "Interfaces/Physical", "widget": "switch", "label": "Admin Up" },
+          "x-daiji-impact": "hot-reload"
+        }
+      }
+    },
+    "InterfaceVLAN": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "parent", "vid", "enabled"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/InterfaceName",
+          "x-daiji-cli": "interfaces vlan <name>",
+          "x-daiji-ui": { "group": "Interfaces/VLAN", "widget": "text", "label": "VLAN Interface" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "parent": { "$ref": "#/$defs/InterfaceName" },
+        "vid": {
+          "$ref": "#/$defs/VlanID",
+          "x-daiji-cli": "interfaces vlan <name> vid",
+          "x-daiji-ui": { "group": "Interfaces/VLAN", "widget": "number", "label": "VLAN ID (802.1Q)" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "protocol": {
+          "type": "string",
+          "enum": ["802.1q", "802.1ad"],
+          "default": "802.1q",
+          "x-daiji-cli": "interfaces vlan <name> protocol",
+          "x-daiji-ui": { "group": "Interfaces/VLAN", "widget": "select", "label": "Tagging Protocol" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "qinq_inner_vid": { "$ref": "#/$defs/VlanID" },
+        "mtu": { "$ref": "#/$defs/MTUBytes" },
+        "vrf": { "type": "string", "maxLength": 15 },
+        "addresses": { "type": "array", "items": { "$ref": "#/$defs/CIDR" } },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "BridgePort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interface"],
+      "properties": {
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "pvid": { "$ref": "#/$defs/VlanID", "default": 1 },
+        "tagged_vids": { "type": "array", "items": { "$ref": "#/$defs/VlanID" } },
+        "untagged_vids": { "type": "array", "items": { "$ref": "#/$defs/VlanID" } },
+        "edge_port": { "type": "boolean", "default": false },
+        "bpdu_guard": { "type": "boolean", "default": false },
+        "storm_control": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "broadcast_pps": { "type": "integer", "minimum": 0, "maximum": 10000000 },
+            "multicast_pps": { "type": "integer", "minimum": 0, "maximum": 10000000 },
+            "unknown_unicast_pps": { "type": "integer", "minimum": 0, "maximum": 10000000 }
+          }
+        },
+        "port_security": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "max_macs": { "type": "integer", "minimum": 1, "maximum": 4096, "default": 1 },
+            "violation_action": { "type": "string", "enum": ["restrict", "shutdown", "protect"], "default": "restrict" },
+            "static_macs": { "type": "array", "items": { "$ref": "#/$defs/MACAddr" } }
+          }
+        }
+      }
+    },
+    "InterfaceBridge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "ports", "enabled"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/InterfaceName",
+          "x-daiji-cli": "interfaces bridge <name>",
+          "x-daiji-ui": { "group": "Switching/Bridge", "widget": "text", "label": "Bridge Name" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "vlan_filtering": { "type": "boolean", "default": true },
+        "stp_mode": {
+          "type": "string",
+          "enum": ["none", "stp", "rstp", "mstp"],
+          "default": "rstp",
+          "x-daiji-cli": "interfaces bridge <name> stp-mode",
+          "x-daiji-ui": { "group": "Switching/STP", "widget": "select", "label": "Spanning Tree Mode" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "stp_priority": { "type": "integer", "minimum": 0, "maximum": 61440, "default": 32768 },
+        "igmp_snooping": { "type": "boolean", "default": true },
+        "mld_snooping": { "type": "boolean", "default": true },
+        "ports": { "type": "array", "items": { "$ref": "#/$defs/BridgePort" } },
+        "mirror": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "dest_port"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "source_ports": { "type": "array", "items": { "$ref": "#/$defs/InterfaceName" } },
+            "dest_port": { "$ref": "#/$defs/InterfaceName" },
+            "direction": { "type": "string", "enum": ["ingress", "egress", "both"], "default": "both" }
+          }
+        },
+        "mtu": { "$ref": "#/$defs/MTUBytes" },
+        "vrf": { "type": "string", "maxLength": 15 },
+        "addresses": { "type": "array", "items": { "$ref": "#/$defs/CIDR" } },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "InterfaceBonding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "mode", "members", "enabled"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/InterfaceName",
+          "x-daiji-cli": "interfaces bonding <name>",
+          "x-daiji-ui": { "group": "Interfaces/Bonding", "widget": "text", "label": "LAG / Bond Name" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "mode": { "type": "string", "enum": ["802.3ad", "active-backup", "balance-xor", "balance-rr"], "default": "802.3ad" },
+        "lacp_rate": { "type": "string", "enum": ["slow", "fast"], "default": "fast" },
+        "xmit_hash_policy": { "type": "string", "enum": ["layer2", "layer2+3", "layer3+4"], "default": "layer3+4" },
+        "members": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/InterfaceName" } },
+        "mtu": { "$ref": "#/$defs/MTUBytes" },
+        "vrf": { "type": "string", "maxLength": 15 },
+        "addresses": { "type": "array", "items": { "$ref": "#/$defs/CIDR" } },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "VRRPInstance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "interface", "vrid", "priority", "virtual_ips", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "vrid": { "type": "integer", "minimum": 1, "maximum": 255 },
+        "priority": { "type": "integer", "minimum": 1, "maximum": 255, "default": 100 },
+        "virtual_ips": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/CIDR" } },
+        "preempt": { "type": "boolean", "default": true },
+        "advert_int_ms": { "type": "integer", "minimum": 100, "maximum": 10000, "default": 1000 },
+        "auth_type": { "type": "string", "enum": ["none", "pass"], "default": "none" },
+        "auth_secret": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 64,
+          "x-daiji-secret": true,
+          "x-daiji-cli": "interfaces vrrp <name> auth-secret",
+          "x-daiji-ui": { "group": "Interfaces/VRRP", "widget": "password", "label": "VRRP Secret" },
+          "x-daiji-impact": "service-restart"
+        },
+        "track_interfaces": { "type": "array", "items": { "$ref": "#/$defs/InterfaceName" } },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "InterfaceVeth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "peer", "enabled"],
+      "properties": {
+        "name": { "$ref": "#/$defs/InterfaceName" },
+        "peer": { "$ref": "#/$defs/InterfaceName" },
+        "netns": { "type": "string", "maxLength": 32 },
+        "mtu": { "$ref": "#/$defs/MTUBytes" },
+        "vrf": { "type": "string", "maxLength": 15 },
+        "addresses": { "type": "array", "items": { "$ref": "#/$defs/CIDR" } },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "InterfaceTunnel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "mode", "local_ip", "enabled"],
+      "properties": {
+        "name": { "$ref": "#/$defs/InterfaceName" },
+        "mode": { "type": "string", "enum": ["gre", "gretap", "ipip", "ip6gre", "vxlan", "sit"] },
+        "local_ip": { "$ref": "#/$defs/IPAddr" },
+        "remote_ip": { "$ref": "#/$defs/IPAddr" },
+        "dev": { "$ref": "#/$defs/InterfaceName" },
+        "ttl": { "type": "integer", "minimum": 1, "maximum": 255, "default": 64 },
+        "key": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "vni": { "type": "integer", "minimum": 1, "maximum": 16777215 },
+        "dst_port": { "$ref": "#/$defs/PortNumber" },
+        "mtu": { "$ref": "#/$defs/MTUBytes" },
+        "vrf": { "type": "string", "maxLength": 15 },
+        "addresses": { "type": "array", "items": { "$ref": "#/$defs/CIDR" } },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "StaticARPEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ip", "mac", "interface"],
+      "properties": {
+        "ip": { "$ref": "#/$defs/IPAddr" },
+        "mac": { "$ref": "#/$defs/MACAddr" },
+        "interface": { "$ref": "#/$defs/InterfaceName" }
+      }
+    },
+    "DHCPStaticLease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mac", "ip"],
+      "properties": {
+        "mac": { "$ref": "#/$defs/MACAddr" },
+        "ip": { "$ref": "#/$defs/IPAddr" },
+        "hostname": { "type": "string", "maxLength": 63 }
+      }
+    },
+    "DHCPServerPool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "interface", "subnet", "range_start", "range_end", "enabled"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "x-daiji-cli": "ip dhcp server <name>",
+          "x-daiji-ui": { "group": "IP/DHCP", "widget": "text", "label": "Pool Name" },
+          "x-daiji-impact": "service-restart"
+        },
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "subnet": { "$ref": "#/$defs/CIDR" },
+        "range_start": { "$ref": "#/$defs/IPAddr" },
+        "range_end": { "$ref": "#/$defs/IPAddr" },
+        "gateway": { "$ref": "#/$defs/IPAddr" },
+        "dns_servers": { "type": "array", "items": { "$ref": "#/$defs/IPAddr" } },
+        "domain_name": { "type": "string", "maxLength": 128 },
+        "lease_time_sec": { "type": "integer", "minimum": 60, "maximum": 31536000, "default": 86400 },
+        "static_leases": { "type": "array", "items": { "$ref": "#/$defs/DHCPStaticLease" } },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "DHCPClient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interface"],
+      "properties": {
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "dhcpv4": { "type": "boolean", "default": true },
+        "dhcpv6_pd": { "type": "boolean", "default": false },
+        "default_route_metric": { "type": "integer", "minimum": 1, "maximum": 65535, "default": 100 },
+        "use_peer_dns": { "type": "boolean", "default": true }
+      }
+    },
+    "DHCPRelay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "listen_interfaces", "upstream_servers", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "listen_interfaces": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/InterfaceName" } },
+        "upstream_servers": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/IPAddr" } },
+        "circuit_id": { "type": "boolean", "default": true },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "VRFDef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "table_id"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/InterfaceName",
+          "x-daiji-cli": "routing vrf <name>",
+          "x-daiji-ui": { "group": "Routing/VRF", "widget": "text", "label": "VRF Name" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "table_id": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "rd": { "type": "string", "maxLength": 32 },
+        "interfaces": { "type": "array", "items": { "$ref": "#/$defs/InterfaceName" } },
+        "description": { "type": "string", "maxLength": 128 }
+      }
+    },
+    "ECMPHop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["next_hop"],
+      "properties": {
+        "next_hop": { "$ref": "#/$defs/IPAddr" },
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "weight": { "type": "integer", "minimum": 1, "maximum": 256, "default": 1 }
+      }
+    },
+    "StaticRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prefix", "enabled"],
+      "properties": {
+        "prefix": { "$ref": "#/$defs/CIDR" },
+        "next_hop": { "$ref": "#/$defs/IPAddr" },
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "distance": { "type": "integer", "minimum": 1, "maximum": 255, "default": 1 },
+        "vrf": { "type": "string", "maxLength": 15 },
+        "ecmp_hops": { "type": "array", "items": { "$ref": "#/$defs/ECMPHop" } },
+        "tag": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "PolicyRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["priority", "table_id"],
+      "properties": {
+        "priority": { "type": "integer", "minimum": 1, "maximum": 32765 },
+        "src_prefix": { "$ref": "#/$defs/CIDR" },
+        "dst_prefix": { "$ref": "#/$defs/CIDR" },
+        "in_interface": { "$ref": "#/$defs/InterfaceName" },
+        "fwmark": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "table_id": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "action": { "type": "string", "enum": ["lookup", "blackhole", "unreachable"], "default": "lookup" }
+      }
+    },
+    "BFDProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "peer_ip"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "peer_ip": { "$ref": "#/$defs/IPAddr" },
+        "vrf": { "type": "string", "maxLength": 15 },
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "min_tx_ms": { "type": "integer", "minimum": 10, "maximum": 60000, "default": 300 },
+        "min_rx_ms": { "type": "integer", "minimum": 10, "maximum": 60000, "default": 300 },
+        "detect_multiplier": { "type": "integer", "minimum": 1, "maximum": 255, "default": 3 },
+        "echo_mode": { "type": "boolean", "default": false }
+      }
+    },
+    "PrefixListRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seq", "action", "prefix"],
+      "properties": {
+        "seq": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "action": { "type": "string", "enum": ["permit", "deny"] },
+        "prefix": { "$ref": "#/$defs/CIDR" },
+        "ge": { "type": "integer", "minimum": 0, "maximum": 128 },
+        "le": { "type": "integer", "minimum": 0, "maximum": 128 }
+      }
+    },
+    "PrefixList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "rules"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "rules": { "type": "array", "items": { "$ref": "#/$defs/PrefixListRule" } }
+      }
+    },
+    "RouteMapEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seq", "action"],
+      "properties": {
+        "seq": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "action": { "type": "string", "enum": ["permit", "deny"] },
+        "match_prefix_list": { "type": "string", "maxLength": 64 },
+        "match_community": { "type": "string", "maxLength": 64 },
+        "set_local_pref": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "set_med": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "set_as_path_prepend": { "type": "string", "maxLength": 128 },
+        "set_community": { "type": "string", "maxLength": 128 }
+      }
+    },
+    "RouteMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "entries"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "entries": { "type": "array", "items": { "$ref": "#/$defs/RouteMapEntry" } }
+      }
+    },
+    "BGPNeighbor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["peer_ip", "remote_asn"],
+      "properties": {
+        "peer_ip": { "$ref": "#/$defs/IPAddr" },
+        "remote_asn": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "description": { "type": "string", "maxLength": 128 },
+        "update_source": { "type": "string", "maxLength": 64 },
+        "ebgp_multihop": { "type": "integer", "minimum": 1, "maximum": 255 },
+        "bfd": { "type": "boolean", "default": false },
+        "send_community": { "type": "boolean", "default": true },
+        "soft_reconfig": { "type": "boolean", "default": true },
+        "route_map_in": { "type": "string", "maxLength": 64 },
+        "route_map_out": { "type": "string", "maxLength": 64 },
+        "password": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 80,
+          "x-daiji-secret": true,
+          "x-daiji-cli": "routing bgp neighbor <peer> password",
+          "x-daiji-ui": { "group": "Routing/BGP", "widget": "password", "label": "TCP MD5 Password" },
+          "x-daiji-impact": "hot-reload"
+        }
+      }
+    },
+    "OSPFArea": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["area_id", "networks"],
+      "properties": {
+        "area_id": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "area_type": { "type": "string", "enum": ["normal", "stub", "nssa"], "default": "normal" },
+        "networks": { "type": "array", "items": { "$ref": "#/$defs/CIDR4" } },
+        "auth_type": { "type": "string", "enum": ["none", "md5"], "default": "none" },
+        "auth_key": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 64,
+          "x-daiji-secret": true,
+          "x-daiji-cli": "routing ospf area <id> auth-key",
+          "x-daiji-ui": { "group": "Routing/OSPF", "widget": "password", "label": "OSPF MD5 Key" },
+          "x-daiji-impact": "hot-reload"
+        }
+      }
+    },
+    "AddressListEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cidr"],
+      "properties": {
+        "cidr": { "$ref": "#/$defs/CIDR" },
+        "comment": { "type": "string", "maxLength": 128 },
+        "timeout_sec": { "type": "integer", "minimum": 0, "maximum": 31536000 }
+      }
+    },
+    "AddressList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "entries"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32, "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,31}$" },
+        "family": { "type": "string", "enum": ["ipv4", "ipv6"], "default": "ipv4" },
+        "entries": { "type": "array", "items": { "$ref": "#/$defs/AddressListEntry" } }
+      }
+    },
+    "FirewallFilterRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "chain", "order", "action", "enabled"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "chain": { "type": "string", "enum": ["input", "forward", "output"] },
+        "order": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "protocol": { "type": "string", "enum": ["any", "tcp", "udp", "icmp", "icmpv6", "gre", "esp", "ah"], "default": "any" },
+        "src_ip": { "$ref": "#/$defs/CIDR" },
+        "src_list": { "type": "string", "maxLength": 32 },
+        "dst_ip": { "$ref": "#/$defs/CIDR" },
+        "dst_list": { "type": "string", "maxLength": 32 },
+        "src_port": { "type": "string", "pattern": "^[0-9]{1,5}(-[0-9]{1,5})?(,[0-9]{1,5}(-[0-9]{1,5})?)*$" },
+        "dst_port": { "type": "string", "pattern": "^[0-9]{1,5}(-[0-9]{1,5})?(,[0-9]{1,5}(-[0-9]{1,5})?)*$" },
+        "in_interface": { "$ref": "#/$defs/InterfaceName" },
+        "out_interface": { "$ref": "#/$defs/InterfaceName" },
+        "conn_state": { "type": "array", "items": { "type": "string", "enum": ["new", "established", "related", "invalid"] } },
+        "l7_app": { "type": "string", "maxLength": 32 },
+        "mark_match": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "action": { "type": "string", "enum": ["accept", "drop", "reject", "log"] },
+        "log": { "type": "boolean", "default": false },
+        "log_prefix": { "type": "string", "maxLength": 32 },
+        "comment": { "type": "string", "maxLength": 128 },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "FirewallNATRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "order", "enabled"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "type": { "type": "string", "enum": ["masquerade", "snat", "dnat", "redirect"] },
+        "order": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "in_interface": { "$ref": "#/$defs/InterfaceName" },
+        "out_interface": { "$ref": "#/$defs/InterfaceName" },
+        "protocol": { "type": "string", "enum": ["any", "tcp", "udp"], "default": "any" },
+        "src_ip": { "$ref": "#/$defs/CIDR" },
+        "dst_ip": { "$ref": "#/$defs/CIDR" },
+        "dst_port": { "$ref": "#/$defs/PortNumber" },
+        "to_addresses": { "$ref": "#/$defs/IPAddr" },
+        "to_port": { "$ref": "#/$defs/PortNumber" },
+        "comment": { "type": "string", "maxLength": 128 },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "FirewallMangleRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "chain", "order", "enabled"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "chain": { "type": "string", "enum": ["prerouting", "forward", "postrouting", "output"] },
+        "order": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "protocol": { "type": "string", "enum": ["any", "tcp", "udp", "icmp"], "default": "any" },
+        "src_ip": { "$ref": "#/$defs/CIDR" },
+        "dst_ip": { "$ref": "#/$defs/CIDR" },
+        "dst_port": { "type": "string", "pattern": "^[0-9]{1,5}(-[0-9]{1,5})?(,[0-9]{1,5}(-[0-9]{1,5})?)*$" },
+        "l7_app": { "type": "string", "maxLength": 32 },
+        "set_mark": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "set_dscp": { "type": "integer", "minimum": 0, "maximum": 63 },
+        "mss_clamp_pmtu": { "type": "boolean", "default": false },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "DPISignature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "protocol", "action"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32, "pattern": "^[a-z0-9_-]+$" },
+        "protocol": { "type": "string", "enum": ["tcp", "udp", "any"] },
+        "port_hints": { "type": "array", "items": { "$ref": "#/$defs/PortNumber" } },
+        "payload_regex": { "type": "string", "maxLength": 256 },
+        "mark": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "action": { "type": "string", "enum": ["mark", "drop", "log"] }
+      }
+    },
+    "QoSInterface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interface", "scheduler", "upload_kbps"],
+      "properties": {
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "scheduler": { "type": "string", "enum": ["htb", "cake", "fq_codel"], "default": "cake" },
+        "download_kbps": { "type": "integer", "minimum": 64, "maximum": 100000000 },
+        "upload_kbps": { "type": "integer", "minimum": 64, "maximum": 100000000 },
+        "overhead_bytes": { "type": "integer", "minimum": 0, "maximum": 128, "default": 18 },
+        "rtt_ms": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 100 },
+        "nat_mode": { "type": "boolean", "default": true },
+        "diffserv": { "type": "string", "enum": ["diffserv4", "diffserv3", "besteffort"], "default": "diffserv4" }
+      }
+    },
+    "QoSQueueTree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "parent_interface", "rate_kbps", "ceil_kbps"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "parent_interface": { "$ref": "#/$defs/InterfaceName" },
+        "class_id": { "type": "integer", "minimum": 10, "maximum": 9999 },
+        "mark_match": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "rate_kbps": { "type": "integer", "minimum": 8, "maximum": 100000000 },
+        "ceil_kbps": { "type": "integer", "minimum": 8, "maximum": 100000000 },
+        "burst_bytes": { "type": "integer", "minimum": 1500, "maximum": 10485760 },
+        "priority": { "type": "integer", "minimum": 1, "maximum": 7, "default": 4 },
+        "qdisc": { "type": "string", "enum": ["fq_codel", "cake", "sfq"], "default": "fq_codel" }
+      }
+    },
+    "QoSSimpleQueue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "target_cidr", "interface", "max_upload_kbps", "max_download_kbps", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "target_cidr": { "$ref": "#/$defs/CIDR" },
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "max_upload_kbps": { "type": "integer", "minimum": 8, "maximum": 100000000 },
+        "max_download_kbps": { "type": "integer", "minimum": 8, "maximum": 100000000 },
+        "burst_upload_kbps": { "type": "integer", "minimum": 0, "maximum": 100000000 },
+        "burst_download_kbps": { "type": "integer", "minimum": 0, "maximum": 100000000 },
+        "burst_time_sec": { "type": "integer", "minimum": 1, "maximum": 120, "default": 8 },
+        "pcq_mode": { "type": "boolean", "default": false },
+        "pcq_rate_kbps": { "type": "integer", "minimum": 0, "maximum": 100000000 },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "WireGuardPeer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "public_key", "allowed_ips"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "public_key": { "type": "string", "minLength": 44, "maxLength": 44 },
+        "preshared_key": {
+          "type": "string",
+          "minLength": 44,
+          "maxLength": 44,
+          "x-daiji-secret": true
+        },
+        "allowed_ips": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/CIDR" } },
+        "endpoint": { "type": "string", "maxLength": 128 },
+        "persistent_keepalive": { "type": "integer", "minimum": 0, "maximum": 3600, "default": 25 }
+      }
+    },
+    "WireGuardInterface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interface", "listen_port", "private_key", "addresses", "enabled"],
+      "properties": {
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "listen_port": { "$ref": "#/$defs/PortNumber" },
+        "private_key": {
+          "type": "string",
+          "minLength": 44,
+          "maxLength": 44,
+          "x-daiji-secret": true,
+          "x-daiji-cli": "vpn wireguard <iface> private-key",
+          "x-daiji-ui": { "group": "VPN/WireGuard", "widget": "password", "label": "Private Key" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "addresses": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/CIDR" } },
+        "mtu": { "$ref": "#/$defs/MTUBytes", "default": 1420 },
+        "peers": { "type": "array", "items": { "$ref": "#/$defs/WireGuardPeer" } },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "IPsecTunnel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "local_ip", "remote_ip", "auth_method", "local_ts", "remote_ts", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "version": { "type": "string", "enum": ["ikev2"], "default": "ikev2" },
+        "local_ip": { "$ref": "#/$defs/IPAddr" },
+        "remote_ip": { "$ref": "#/$defs/IPAddr" },
+        "local_id": { "type": "string", "maxLength": 128 },
+        "remote_id": { "type": "string", "maxLength": 128 },
+        "auth_method": { "type": "string", "enum": ["psk", "pubkey"], "default": "psk" },
+        "psk": { "type": "string", "minLength": 12, "maxLength": 256, "x-daiji-secret": true },
+        "ike_proposals": { "type": "string", "maxLength": 128, "default": "aes256gcm16-prfsha384-ecp384" },
+        "esp_proposals": { "type": "string", "maxLength": 128, "default": "aes256gcm16-ecp384" },
+        "local_ts": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/CIDR" } },
+        "remote_ts": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/CIDR" } },
+        "dpd_delay_sec": { "type": "integer", "minimum": 5, "maximum": 300, "default": 30 },
+        "vti_interface": { "$ref": "#/$defs/InterfaceName" },
+        "vti_key": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "OpenVPNInstance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "role", "proto", "port", "dev_type", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "role": { "type": "string", "enum": ["server", "client"] },
+        "proto": { "type": "string", "enum": ["udp", "tcp"], "default": "udp" },
+        "port": { "$ref": "#/$defs/PortNumber", "default": 1194 },
+        "dev_type": { "type": "string", "enum": ["tun", "tap"], "default": "tun" },
+        "cipher": { "type": "string", "enum": ["AES-256-GCM", "CHACHA20-POLY1305"], "default": "AES-256-GCM" },
+        "subnet": { "$ref": "#/$defs/CIDR4" },
+        "remote_host": { "type": "string", "maxLength": 128 },
+        "tls_crypt_key": { "type": "string", "minLength": 16, "maxLength": 4096, "x-daiji-secret": true },
+        "ca_cert": { "type": "string", "maxLength": 256 },
+        "cert": { "type": "string", "maxLength": 256 },
+        "private_key_path": { "type": "string", "maxLength": 256 },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "EoIPTunnel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "local_ip", "remote_ip", "tunnel_id", "enabled"],
+      "properties": {
+        "name": { "$ref": "#/$defs/InterfaceName" },
+        "local_ip": { "$ref": "#/$defs/IPAddr" },
+        "remote_ip": { "$ref": "#/$defs/IPAddr" },
+        "tunnel_id": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "mtu": { "$ref": "#/$defs/MTUBytes", "default": 1450 },
+        "bridge": { "$ref": "#/$defs/InterfaceName" },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "ISPProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "download_kbps", "upload_kbps"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48,
+          "x-daiji-cli": "isp profile <name>",
+          "x-daiji-ui": { "group": "ISP/Profiles", "widget": "text", "label": "Profile Name" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "download_kbps": { "type": "integer", "minimum": 32, "maximum": 100000000 },
+        "upload_kbps": { "type": "integer", "minimum": 32, "maximum": 100000000 },
+        "burst_download_kbps": { "type": "integer", "minimum": 0, "maximum": 100000000 },
+        "burst_upload_kbps": { "type": "integer", "minimum": 0, "maximum": 100000000 },
+        "burst_time_sec": { "type": "integer", "minimum": 1, "maximum": 120, "default": 8 },
+        "address_pool": { "type": "string", "maxLength": 48 },
+        "ipv6_pool": { "type": "string", "maxLength": 48 },
+        "dns_servers": { "type": "array", "items": { "$ref": "#/$defs/IPAddr" } },
+        "session_timeout_sec": { "type": "integer", "minimum": 0, "maximum": 31536000 },
+        "idle_timeout_sec": { "type": "integer", "minimum": 0, "maximum": 86400 },
+        "shared_users": { "type": "integer", "minimum": 1, "maximum": 100, "default": 1 },
+        "expired_pool": { "type": "string", "maxLength": 48 },
+        "expired_redirect_url": { "type": "string", "format": "uri" }
+      }
+    },
+    "ISPIPPool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "ranges"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "ranges": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 7, "maxLength": 64 } },
+        "next_pool": { "type": "string", "maxLength": 48 }
+      }
+    },
+    "RADIUSServerTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "host", "secret"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "host": { "$ref": "#/$defs/IPAddr" },
+        "auth_port": { "$ref": "#/$defs/PortNumber", "default": 1812 },
+        "acct_port": { "$ref": "#/$defs/PortNumber", "default": 1813 },
+        "secret": { "type": "string", "minLength": 8, "maxLength": 128, "x-daiji-secret": true },
+        "priority": { "type": "integer", "minimum": 1, "maximum": 100, "default": 1 },
+        "timeout_sec": { "type": "integer", "minimum": 1, "maximum": 30, "default": 3 }
+      }
+    },
+    "RADIUSClientACL": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "cidr", "secret"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "cidr": { "$ref": "#/$defs/CIDR" },
+        "secret": { "type": "string", "minLength": 8, "maxLength": 128, "x-daiji-secret": true }
+      }
+    },
+    "PPPoEServer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "interface", "local_ip", "ip_pool", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "service_name": { "type": "string", "maxLength": 64 },
+        "ac_name": { "type": "string", "maxLength": 64, "default": "DaijiOS-BNG" },
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "vlan_id": { "$ref": "#/$defs/VlanID" },
+        "local_ip": { "$ref": "#/$defs/IPv4Addr" },
+        "ip_pool": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "mtu": { "type": "integer", "minimum": 576, "maximum": 1500, "default": 1492 },
+        "mru": { "type": "integer", "minimum": 576, "maximum": 1500, "default": 1492 },
+        "auth_methods": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["pap", "chap", "mschapv2"] }
+        },
+        "use_radius": { "type": "boolean", "default": true },
+        "default_profile": { "type": "string", "maxLength": 48 },
+        "session_limit": { "type": "integer", "minimum": 1, "maximum": 100000, "default": 10000 },
+        "one_session_per_mac": { "type": "boolean", "default": true },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "PPPoEClient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "interface", "username", "password", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "username": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "password": { "type": "string", "minLength": 4, "maxLength": 128, "x-daiji-secret": true },
+        "service_name": { "type": "string", "maxLength": 64 },
+        "mtu": { "type": "integer", "minimum": 576, "maximum": 1500, "default": 1492 },
+        "default_route": { "type": "boolean", "default": true },
+        "distance": { "type": "integer", "minimum": 1, "maximum": 255, "default": 1 },
+        "use_peer_dns": { "type": "boolean", "default": true },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "PPPoESecret": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["username", "password", "profile"],
+      "properties": {
+        "username": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "password": { "type": "string", "minLength": 4, "maxLength": 128, "x-daiji-secret": true },
+        "service": { "type": "string", "enum": ["any", "pppoe", "ipoe", "hotspot", "l2tp"], "default": "pppoe" },
+        "profile": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "static_ip": { "$ref": "#/$defs/IPv4Addr" },
+        "caller_mac": { "$ref": "#/$defs/MACAddr" },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "disabled": { "type": "boolean", "default": false },
+        "comment": { "type": "string", "maxLength": 128 }
+      }
+    },
+    "IPoEServer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "interface", "auth_mode", "ip_pool", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "auth_mode": { "type": "string", "enum": ["mac", "circuit-id", "option82", "radius"], "default": "mac" },
+        "ip_pool": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "default_profile": { "type": "string", "maxLength": 48 },
+        "use_radius": { "type": "boolean", "default": true },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "HotspotServer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "interface", "address_pool", "dns_name", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "address_pool": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "dns_name": { "type": "string", "format": "hostname" },
+        "login_page_url": { "type": "string", "format": "uri" },
+        "trial_enabled": { "type": "boolean", "default": false },
+        "trial_uptime_sec": { "type": "integer", "minimum": 60, "maximum": 86400, "default": 900 },
+        "walled_garden_hosts": { "type": "array", "items": { "type": "string", "maxLength": 128 } },
+        "walled_garden_cidrs": { "type": "array", "items": { "$ref": "#/$defs/CIDR" } },
+        "use_radius": { "type": "boolean", "default": false },
+        "mac_cookie": { "type": "boolean", "default": true },
+        "default_profile": { "type": "string", "maxLength": 48 },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "HotspotVoucher": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "profile", "validity_sec"],
+      "properties": {
+        "code": { "type": "string", "minLength": 4, "maxLength": 32, "pattern": "^[A-Za-z0-9_-]+$" },
+        "profile": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "validity_sec": { "type": "integer", "minimum": 60, "maximum": 31536000 },
+        "data_limit_mb": { "type": "integer", "minimum": 0, "maximum": 10000000 },
+        "max_devices": { "type": "integer", "minimum": 1, "maximum": 20, "default": 1 },
+        "expires_at": { "type": "string", "format": "date-time" },
+        "disabled": { "type": "boolean", "default": false }
+      }
+    },
+    "MultiWANLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "interface", "gateway", "weight", "check_method", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "interface": { "$ref": "#/$defs/InterfaceName" },
+        "gateway": { "$ref": "#/$defs/IPAddr" },
+        "weight": { "type": "integer", "minimum": 1, "maximum": 100, "default": 1 },
+        "distance": { "type": "integer", "minimum": 1, "maximum": 255, "default": 1 },
+        "check_method": { "type": "string", "enum": ["recursive", "netwatch-icmp", "http"], "default": "recursive" },
+        "check_targets": { "type": "array", "items": { "$ref": "#/$defs/IPAddr" } },
+        "check_interval_sec": { "type": "integer", "minimum": 1, "maximum": 300, "default": 5 },
+        "check_timeout_ms": { "type": "integer", "minimum": 100, "maximum": 10000, "default": 1000 },
+        "fail_threshold": { "type": "integer", "minimum": 1, "maximum": 20, "default": 3 },
+        "recover_threshold": { "type": "integer", "minimum": 1, "maximum": 20, "default": 3 },
+        "routing_table": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "SNMPv3User": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["username", "auth_proto", "auth_pass", "priv_proto", "priv_pass"],
+      "properties": {
+        "username": { "type": "string", "minLength": 3, "maxLength": 32 },
+        "auth_proto": { "type": "string", "enum": ["sha256", "sha512"], "default": "sha256" },
+        "auth_pass": { "type": "string", "minLength": 8, "maxLength": 128, "x-daiji-secret": true },
+        "priv_proto": { "type": "string", "enum": ["aes128"], "default": "aes128" },
+        "priv_pass": { "type": "string", "minLength": 8, "maxLength": 128, "x-daiji-secret": true }
+      }
+    },
+    "DaijiScriptDef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "source", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 48, "pattern": "^[a-zA-Z0-9_-]+$" },
+        "source": { "type": "string", "minLength": 1, "maxLength": 16384 },
+        "permissions": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["read", "write", "net", "diag"] }
+        },
+        "timeout_ms": { "type": "integer", "minimum": 50, "maximum": 30000, "default": 2000 },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "ScriptSchedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "script_name", "interval_sec", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "script_name": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "interval_sec": { "type": "integer", "minimum": 5, "maximum": 2592000 },
+        "start_on_boot": { "type": "boolean", "default": false },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "EventHook": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "event", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "event": {
+          "type": "string",
+          "enum": ["wan-up", "wan-down", "pppoe-up", "pppoe-down", "user-expired", "config-commit", "high-cpu"]
+        },
+        "script_name": { "type": "string", "maxLength": 48 },
+        "webhook_name": { "type": "string", "maxLength": 48 },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "WebhookTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "url", "secret", "enabled"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 48 },
+        "url": { "type": "string", "format": "uri" },
+        "secret": { "type": "string", "minLength": 12, "maxLength": 256, "x-daiji-secret": true },
+        "events": { "type": "array", "items": { "type": "string", "maxLength": 32 } },
+        "timeout_ms": { "type": "integer", "minimum": 500, "maximum": 30000, "default": 5000 },
+        "retry_count": { "type": "integer", "minimum": 0, "maximum": 5, "default": 2 },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "format": "semver",
+      "default": "1.3.0",
+      "description": "Schema semantic version used for backward-compatible migrations.",
+      "x-daiji-cli": "system schema-version",
+      "x-daiji-ui": { "group": "System", "widget": "readonly", "label": "Schema Version" },
+      "x-daiji-impact": "none"
+    },
+    "system": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hostname", "timezone", "watchdog"],
+      "properties": {
+        "hostname": {
+          "type": "string",
+          "format": "hostname",
+          "minLength": 1,
+          "maxLength": 63,
+          "default": "daiji-router",
+          "x-daiji-cli": "system hostname",
+          "x-daiji-ui": { "group": "Identity", "widget": "text", "label": "Hostname" },
+          "x-daiji-yang-path": "/daiji-system:system/hostname",
+          "x-daiji-impact": "hot-reload"
+        },
+        "domain_name": {
+          "type": "string",
+          "maxLength": 128,
+          "default": "local.daiji",
+          "x-daiji-cli": "system domain-name",
+          "x-daiji-ui": { "group": "Identity", "widget": "text", "label": "Domain Name" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_/+\\-]+$",
+          "default": "UTC",
+          "x-daiji-cli": "system timezone",
+          "x-daiji-ui": { "group": "Identity", "widget": "timezone", "label": "Timezone" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "ntp_servers": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3, "maxLength": 128 },
+          "x-daiji-cli": "system ntp server",
+          "x-daiji-ui": { "group": "Time", "widget": "string-list", "label": "NTP Servers" },
+          "x-daiji-impact": "service-restart"
+        },
+        "motd_banner": {
+          "type": "string",
+          "maxLength": 512,
+          "default": "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)",
+          "x-daiji-cli": "system login-banner",
+          "x-daiji-ui": { "group": "Identity", "widget": "textarea", "label": "Login Banner" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "watchdog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "timeout_sec", "max_failed_boots"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "x-daiji-cli": "system watchdog enabled",
+              "x-daiji-ui": { "group": "Stability", "widget": "switch", "label": "Hardware Watchdog" },
+              "x-daiji-impact": "hot-reload"
+            },
+            "timeout_sec": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 300,
+              "default": 30,
+              "x-daiji-cli": "system watchdog timeout",
+              "x-daiji-ui": { "group": "Stability", "widget": "number", "label": "Watchdog Timeout (s)" },
+              "x-daiji-impact": "service-restart"
+            },
+            "max_failed_boots": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "default": 3,
+              "x-daiji-cli": "system watchdog max-failed-boots",
+              "x-daiji-ui": { "group": "Stability", "widget": "number", "label": "Safe-Mode Boot Threshold" },
+              "x-daiji-impact": "hot-reload"
+            }
+          }
+        },
+        "users": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/UserEntry" }
+        }
+      }
+    },
+    "management": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ssh", "api", "daiweb"],
+      "properties": {
+        "ssh": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "port", "password_auth"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "x-daiji-cli": "management ssh enabled",
+              "x-daiji-ui": { "group": "Management/SSH", "widget": "switch", "label": "SSH Enabled" },
+              "x-daiji-impact": "service-restart"
+            },
+            "port": {
+              "$ref": "#/$defs/PortNumber",
+              "default": 22,
+              "x-daiji-cli": "management ssh port",
+              "x-daiji-ui": { "group": "Management/SSH", "widget": "number", "label": "SSH Port" },
+              "x-daiji-impact": "service-restart"
+            },
+            "password_auth": {
+              "type": "boolean",
+              "default": false,
+              "x-daiji-cli": "management ssh password-auth",
+              "x-daiji-ui": { "group": "Management/SSH", "widget": "switch", "label": "Allow Password Auth" },
+              "x-daiji-impact": "service-restart"
+            },
+            "listen_addresses": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/IPAddr" },
+              "x-daiji-cli": "management ssh listen-address",
+              "x-daiji-ui": { "group": "Management/SSH", "widget": "ip-list", "label": "Listen IPs" },
+              "x-daiji-impact": "service-restart"
+            }
+          }
+        },
+        "api": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "port", "tls_enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "x-daiji-cli": "management api enabled",
+              "x-daiji-ui": { "group": "Management/API", "widget": "switch", "label": "Control API Enabled" },
+              "x-daiji-impact": "service-restart"
+            },
+            "port": {
+              "$ref": "#/$defs/PortNumber",
+              "default": 8443,
+              "x-daiji-cli": "management api port",
+              "x-daiji-ui": { "group": "Management/API", "widget": "number", "label": "API Port" },
+              "x-daiji-impact": "service-restart"
+            },
+            "tls_enabled": {
+              "type": "boolean",
+              "default": true,
+              "x-daiji-cli": "management api tls-enabled",
+              "x-daiji-ui": { "group": "Management/API", "widget": "switch", "label": "Enforce TLS 1.3" },
+              "x-daiji-impact": "service-restart"
+            },
+            "signing_secret": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 256,
+              "x-daiji-secret": true,
+              "x-daiji-cli": "management api signing-secret",
+              "x-daiji-ui": { "group": "Management/API", "widget": "password", "label": "Token Signing Key" },
+              "x-daiji-rbac": "superadmin",
+              "x-daiji-impact": "service-restart"
+            }
+          }
+        },
+        "daiweb": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "port"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "x-daiji-cli": "management daiweb enabled",
+              "x-daiji-ui": { "group": "Management/DaiWeb", "widget": "switch", "label": "DaiWeb UI Enabled" },
+              "x-daiji-impact": "service-restart"
+            },
+            "port": {
+              "$ref": "#/$defs/PortNumber",
+              "default": 443,
+              "x-daiji-cli": "management daiweb port",
+              "x-daiji-ui": { "group": "Management/DaiWeb", "widget": "number", "label": "DaiWeb HTTPS Port" },
+              "x-daiji-impact": "service-restart"
+            },
+            "theme": {
+              "type": "string",
+              "enum": ["daiji-dark", "daiji-light", "system"],
+              "default": "daiji-dark",
+              "x-daiji-cli": "management daiweb theme",
+              "x-daiji-ui": { "group": "Management/DaiWeb", "widget": "select", "label": "Default Theme" },
+              "x-daiji-impact": "hot-reload"
+            }
+          }
+        },
+        "cloud_link": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "x-daiji-cli": "management cloud enabled",
+              "x-daiji-ui": { "group": "Cloud", "widget": "switch", "label": "DaijiCloud Connector" },
+              "x-daiji-impact": "service-restart"
+            },
+            "controller_url": {
+              "type": "string",
+              "format": "uri",
+              "x-daiji-cli": "management cloud controller-url",
+              "x-daiji-ui": { "group": "Cloud", "widget": "text", "label": "DaijiCloud Endpoint" },
+              "x-daiji-impact": "service-restart"
+            },
+            "enrollment_token": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 256,
+              "x-daiji-secret": true,
+              "x-daiji-cli": "management cloud enrollment-token",
+              "x-daiji-ui": { "group": "Cloud", "widget": "password", "label": "Enrollment Token" },
+              "x-daiji-rbac": "superadmin",
+              "x-daiji-impact": "service-restart"
+            }
+          }
+        }
+      }
+    },
+    "interfaces": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "physical": { "type": "array", "items": { "$ref": "#/$defs/InterfacePhysical" } },
+        "vlans": { "type": "array", "items": { "$ref": "#/$defs/InterfaceVLAN" } },
+        "bridges": { "type": "array", "items": { "$ref": "#/$defs/InterfaceBridge" } },
+        "bondings": { "type": "array", "items": { "$ref": "#/$defs/InterfaceBonding" } },
+        "vrrp": { "type": "array", "items": { "$ref": "#/$defs/VRRPInstance" } },
+        "veth": { "type": "array", "items": { "$ref": "#/$defs/InterfaceVeth" } },
+        "tunnels": { "type": "array", "items": { "$ref": "#/$defs/InterfaceTunnel" } }
+      }
+    },
+    "ip": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ipv4_forward": {
+          "type": "boolean",
+          "default": true,
+          "x-daiji-cli": "ip ipv4 forward",
+          "x-daiji-ui": { "group": "IP/Kernel", "widget": "switch", "label": "IPv4 Forwarding" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "ipv6_forward": {
+          "type": "boolean",
+          "default": true,
+          "x-daiji-cli": "ip ipv6 forward",
+          "x-daiji-ui": { "group": "IP/Kernel", "widget": "switch", "label": "IPv6 Forwarding" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "rp_filter": {
+          "type": "integer",
+          "enum": [0, 1, 2],
+          "default": 2,
+          "x-daiji-cli": "ip rp-filter",
+          "x-daiji-ui": { "group": "IP/Kernel", "widget": "select", "label": "Reverse Path Filter" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "arp_proxy": { "type": "boolean", "default": false },
+        "nd_proxy": { "type": "boolean", "default": false },
+        "arp_static": { "type": "array", "items": { "$ref": "#/$defs/StaticARPEntry" } },
+        "dhcp": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "servers": { "type": "array", "items": { "$ref": "#/$defs/DHCPServerPool" } },
+            "clients": { "type": "array", "items": { "$ref": "#/$defs/DHCPClient" } },
+            "relays": { "type": "array", "items": { "$ref": "#/$defs/DHCPRelay" } }
+          }
+        },
+        "dns": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "x-daiji-cli": "ip dns enabled",
+              "x-daiji-ui": { "group": "IP/DNS", "widget": "switch", "label": "DNS Cache/Forwarder" },
+              "x-daiji-impact": "service-restart"
+            },
+            "listen_addresses": { "type": "array", "items": { "$ref": "#/$defs/IPAddr" } },
+            "port": { "$ref": "#/$defs/PortNumber", "default": 53 },
+            "upstreams": { "type": "array", "items": { "$ref": "#/$defs/IPAddr" } },
+            "cache_size": { "type": "integer", "minimum": 0, "maximum": 100000, "default": 4096 },
+            "dnssec": { "type": "boolean", "default": true },
+            "local_domain": { "type": "string", "maxLength": 128 },
+            "static_hosts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["hostname", "ip"],
+                "properties": {
+                  "hostname": { "type": "string", "format": "hostname" },
+                  "ip": { "$ref": "#/$defs/IPAddr" }
+                }
+              }
+            }
+          }
+        },
+        "ntp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "x-daiji-cli": "ip ntp enabled",
+              "x-daiji-ui": { "group": "IP/NTP", "widget": "switch", "label": "Chrony NTP Client/Server" },
+              "x-daiji-impact": "service-restart"
+            },
+            "servers": { "type": "array", "items": { "type": "string", "minLength": 3, "maxLength": 128 } },
+            "server_mode": { "type": "boolean", "default": false },
+            "allow_subnets": { "type": "array", "items": { "$ref": "#/$defs/CIDR" } }
+          }
+        }
+      }
+    },
+    "routing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vrfs": { "type": "array", "items": { "$ref": "#/$defs/VRFDef" } },
+        "static_routes": { "type": "array", "items": { "$ref": "#/$defs/StaticRoute" } },
+        "policy_routes": { "type": "array", "items": { "$ref": "#/$defs/PolicyRoute" } },
+        "bfd": { "type": "array", "items": { "$ref": "#/$defs/BFDProfile" } },
+        "ospf": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "x-daiji-cli": "routing ospf enabled",
+              "x-daiji-ui": { "group": "Routing/OSPF", "widget": "switch", "label": "OSPFv2 Enabled" },
+              "x-daiji-impact": "hot-reload"
+            },
+            "router_id": { "$ref": "#/$defs/IPv4Addr" },
+            "vrf": { "type": "string", "maxLength": 15 },
+            "bfd": { "type": "boolean", "default": false },
+            "default_originate": { "type": "boolean", "default": false },
+            "passive_interfaces": { "type": "array", "items": { "$ref": "#/$defs/InterfaceName" } },
+            "redistribute": {
+              "type": "array",
+              "items": { "type": "string", "enum": ["connected", "static", "bgp", "rip"] }
+            },
+            "areas": { "type": "array", "items": { "$ref": "#/$defs/OSPFArea" } }
+          }
+        },
+        "ospfv3": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "router_id": { "$ref": "#/$defs/IPv4Addr" },
+            "vrf": { "type": "string", "maxLength": 15 },
+            "areas": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["area_id", "interfaces"],
+                "properties": {
+                  "area_id": { "type": "string", "minLength": 1, "maxLength": 32 },
+                  "interfaces": { "type": "array", "items": { "$ref": "#/$defs/InterfaceName" } }
+                }
+              }
+            }
+          }
+        },
+        "bgp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "x-daiji-cli": "routing bgp enabled",
+              "x-daiji-ui": { "group": "Routing/BGP", "widget": "switch", "label": "BGP4+ Enabled" },
+              "x-daiji-impact": "hot-reload"
+            },
+            "asn": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+            "router_id": { "$ref": "#/$defs/IPv4Addr" },
+            "vrf": { "type": "string", "maxLength": 15 },
+            "ecmp_max_paths": { "type": "integer", "minimum": 1, "maximum": 64, "default": 4 },
+            "graceful_restart": { "type": "boolean", "default": true },
+            "networks": { "type": "array", "items": { "$ref": "#/$defs/CIDR" } },
+            "prefix_lists": { "type": "array", "items": { "$ref": "#/$defs/PrefixList" } },
+            "route_maps": { "type": "array", "items": { "$ref": "#/$defs/RouteMap" } },
+            "neighbors": { "type": "array", "items": { "$ref": "#/$defs/BGPNeighbor" } }
+          }
+        },
+        "rip": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "version": { "type": "integer", "enum": [1, 2], "default": 2 },
+            "vrf": { "type": "string", "maxLength": 15 },
+            "networks": { "type": "array", "items": { "$ref": "#/$defs/CIDR4" } },
+            "passive_interfaces": { "type": "array", "items": { "$ref": "#/$defs/InterfaceName" } },
+            "redistribute": { "type": "array", "items": { "type": "string", "enum": ["connected", "static", "ospf", "bgp"] } }
+          }
+        },
+        "isis": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "net_id": { "type": "string", "minLength": 8, "maxLength": 64 },
+            "level": { "type": "string", "enum": ["level-1", "level-2-only", "level-1-2"], "default": "level-1-2" },
+            "vrf": { "type": "string", "maxLength": 15 },
+            "interfaces": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name"],
+                "properties": {
+                  "name": { "$ref": "#/$defs/InterfaceName" },
+                  "metric": { "type": "integer", "minimum": 1, "maximum": 16777215, "default": 10 },
+                  "bfd": { "type": "boolean", "default": false },
+                  "passive": { "type": "boolean", "default": false }
+                }
+              }
+            }
+          }
+        },
+        "mpls": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "label_range_min": { "type": "integer", "minimum": 16, "maximum": 1048575, "default": 16 },
+            "label_range_max": { "type": "integer", "minimum": 16, "maximum": 1048575, "default": 1048575 },
+            "ldp": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["enabled"],
+              "properties": {
+                "enabled": { "type": "boolean", "default": false },
+                "router_id": { "$ref": "#/$defs/IPv4Addr" },
+                "transport_ip": { "$ref": "#/$defs/IPv4Addr" },
+                "interfaces": { "type": "array", "items": { "$ref": "#/$defs/InterfaceName" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "switching": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "lldp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "x-daiji-cli": "switching lldp enabled",
+              "x-daiji-ui": { "group": "Switching/LLDP", "widget": "switch", "label": "LLDP Enabled" },
+              "x-daiji-impact": "service-restart"
+            },
+            "tx_interval_sec": { "type": "integer", "minimum": 5, "maximum": 3600, "default": 30 },
+            "tx_hold": { "type": "integer", "minimum": 2, "maximum": 10, "default": 4 },
+            "cdp_compat": { "type": "boolean", "default": true },
+            "med_enabled": { "type": "boolean", "default": true },
+            "interfaces": { "type": "array", "items": { "$ref": "#/$defs/InterfaceName" } }
+          }
+        }
+      }
+    },
+    "firewall": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["input", "forward", "output"],
+          "properties": {
+            "input": { "type": "string", "enum": ["accept", "drop"], "default": "drop" },
+            "forward": { "type": "string", "enum": ["accept", "drop"], "default": "drop" },
+            "output": { "type": "string", "enum": ["accept", "drop"], "default": "accept" }
+          }
+        },
+        "conntrack": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max_entries": { "type": "integer", "minimum": 4096, "maximum": 16777216, "default": 262144 },
+            "tcp_established_timeout_sec": { "type": "integer", "minimum": 60, "maximum": 86400, "default": 3600 },
+            "udp_timeout_sec": { "type": "integer", "minimum": 10, "maximum": 3600, "default": 120 },
+            "syn_flood_protect": { "type": "boolean", "default": true },
+            "syn_rate_per_sec": { "type": "integer", "minimum": 1, "maximum": 1000000, "default": 200 },
+            "log_invalid": { "type": "boolean", "default": true }
+          }
+        },
+        "address_lists": { "type": "array", "items": { "$ref": "#/$defs/AddressList" } },
+        "l7_dpi": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "x-daiji-cli": "firewall dpi enabled",
+              "x-daiji-ui": { "group": "Firewall/DPI", "widget": "switch", "label": "L7 DPI Inspection" },
+              "x-daiji-impact": "service-restart"
+            },
+            "engine": { "type": "string", "enum": ["ndpi", "nft-l7"], "default": "nft-l7" },
+            "blocked_categories": { "type": "array", "items": { "type": "string", "maxLength": 32 } },
+            "custom_signatures": { "type": "array", "items": { "$ref": "#/$defs/DPISignature" } }
+          }
+        },
+        "filter_rules": { "type": "array", "items": { "$ref": "#/$defs/FirewallFilterRule" } },
+        "nat_rules": { "type": "array", "items": { "$ref": "#/$defs/FirewallNATRule" } },
+        "mangle_rules": { "type": "array", "items": { "$ref": "#/$defs/FirewallMangleRule" } }
+      }
+    },
+    "qos": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interfaces": { "type": "array", "items": { "$ref": "#/$defs/QoSInterface" } },
+        "queue_trees": { "type": "array", "items": { "$ref": "#/$defs/QoSQueueTree" } },
+        "simple_queues": { "type": "array", "items": { "$ref": "#/$defs/QoSSimpleQueue" } }
+      }
+    },
+    "vpn": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "wireguard": { "type": "array", "items": { "$ref": "#/$defs/WireGuardInterface" } },
+        "ipsec": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "charon_threads": { "type": "integer", "minimum": 1, "maximum": 64, "default": 4 },
+            "tunnels": { "type": "array", "items": { "$ref": "#/$defs/IPsecTunnel" } }
+          }
+        },
+        "openvpn": { "type": "array", "items": { "$ref": "#/$defs/OpenVPNInstance" } },
+        "l2tp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "listen_ip": { "$ref": "#/$defs/IPv4Addr" },
+            "ipsec_psk": { "type": "string", "minLength": 12, "maxLength": 256, "x-daiji-secret": true },
+            "local_ip": { "$ref": "#/$defs/IPv4Addr" },
+            "client_pool": { "$ref": "#/$defs/CIDR4" }
+          }
+        },
+        "pptp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "legacy_acknowledged": { "type": "boolean", "default": false },
+            "local_ip": { "$ref": "#/$defs/IPv4Addr" },
+            "client_pool": { "$ref": "#/$defs/CIDR4" },
+            "require_mppe128": { "type": "boolean", "default": true }
+          }
+        },
+        "sstp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "listen_port": { "$ref": "#/$defs/PortNumber", "default": 443 },
+            "cert_path": { "type": "string", "maxLength": 256 },
+            "private_key_path": { "type": "string", "maxLength": 256 },
+            "client_pool": { "$ref": "#/$defs/CIDR4" }
+          }
+        },
+        "eoip": { "type": "array", "items": { "$ref": "#/$defs/EoIPTunnel" } }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rbac": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enforce"],
+          "properties": {
+            "enforce": {
+              "type": "boolean",
+              "default": true,
+              "x-daiji-cli": "security rbac enforce",
+              "x-daiji-ui": { "group": "Security/RBAC", "widget": "switch", "label": "Enforce RBAC" },
+              "x-daiji-rbac": "superadmin",
+              "x-daiji-impact": "hot-reload"
+            },
+            "default_role": { "type": "string", "enum": ["readonly", "operator"], "default": "readonly" }
+          }
+        },
+        "two_factor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enforce_for_admins"],
+          "properties": {
+            "enforce_for_admins": {
+              "type": "boolean",
+              "default": true,
+              "x-daiji-cli": "security 2fa enforce-admins",
+              "x-daiji-ui": { "group": "Security/2FA", "widget": "switch", "label": "Enforce TOTP for Admins" },
+              "x-daiji-rbac": "superadmin",
+              "x-daiji-impact": "hot-reload"
+            },
+            "issuer": { "type": "string", "maxLength": 64, "default": "DaijiOS" },
+            "window_skew": { "type": "integer", "minimum": 0, "maximum": 2, "default": 1 }
+          }
+        },
+        "ssh_hardening": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "permit_root_login": { "type": "boolean", "default": false },
+            "max_auth_tries": { "type": "integer", "minimum": 1, "maximum": 10, "default": 3 },
+            "idle_timeout_sec": { "type": "integer", "minimum": 60, "maximum": 3600, "default": 600 },
+            "allow_ciphers": { "type": "array", "items": { "type": "string", "maxLength": 64 } },
+            "allow_kex": { "type": "array", "items": { "type": "string", "maxLength": 64 } }
+          }
+        },
+        "api_tokens": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max_ttl_hours": { "type": "integer", "minimum": 1, "maximum": 8760, "default": 720 },
+            "require_scoped_permissions": { "type": "boolean", "default": true }
+          }
+        },
+        "bruteforce": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "x-daiji-cli": "security bruteforce enabled",
+              "x-daiji-ui": { "group": "Security/Defense", "widget": "switch", "label": "Brute-Force Ban" },
+              "x-daiji-impact": "hot-reload"
+            },
+            "ssh_max_attempts": { "type": "integer", "minimum": 2, "maximum": 50, "default": 5 },
+            "ssh_window_sec": { "type": "integer", "minimum": 10, "maximum": 3600, "default": 300 },
+            "api_max_attempts": { "type": "integer", "minimum": 2, "maximum": 100, "default": 10 },
+            "api_window_sec": { "type": "integer", "minimum": 10, "maximum": 3600, "default": 300 },
+            "ban_duration_sec": { "type": "integer", "minimum": 60, "maximum": 604800, "default": 3600 },
+            "whitelist_cidrs": { "type": "array", "items": { "$ref": "#/$defs/CIDR" } }
+          }
+        },
+        "firmware_security": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "secure_boot_required": { "type": "boolean", "default": true },
+            "require_signed_dpk": { "type": "boolean", "default": true },
+            "require_signed_ab": { "type": "boolean", "default": true },
+            "audit_log_immutable": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    },
+    "isp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "profiles": { "type": "array", "items": { "$ref": "#/$defs/ISPProfile" } },
+        "ip_pools": { "type": "array", "items": { "$ref": "#/$defs/ISPIPPool" } },
+        "radius": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "client": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["enabled"],
+              "properties": {
+                "enabled": { "type": "boolean", "default": false },
+                "nas_identifier": { "type": "string", "maxLength": 64, "default": "daiji-nas-01" },
+                "nas_ip": { "$ref": "#/$defs/IPv4Addr" },
+                "coa_enabled": { "type": "boolean", "default": true },
+                "coa_port": { "$ref": "#/$defs/PortNumber", "default": 3799 },
+                "coa_secret": { "type": "string", "minLength": 8, "maxLength": 128, "x-daiji-secret": true },
+                "servers": { "type": "array", "items": { "$ref": "#/$defs/RADIUSServerTarget" } }
+              }
+            },
+            "server": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["enabled"],
+              "properties": {
+                "enabled": { "type": "boolean", "default": false },
+                "auth_port": { "$ref": "#/$defs/PortNumber", "default": 1812 },
+                "acct_port": { "$ref": "#/$defs/PortNumber", "default": 1813 },
+                "clients": { "type": "array", "items": { "$ref": "#/$defs/RADIUSClientACL" } }
+              }
+            }
+          }
+        },
+        "pppoe": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "servers": { "type": "array", "items": { "$ref": "#/$defs/PPPoEServer" } },
+            "clients": { "type": "array", "items": { "$ref": "#/$defs/PPPoEClient" } },
+            "secrets": { "type": "array", "items": { "$ref": "#/$defs/PPPoESecret" } }
+          }
+        },
+        "ipoe": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "servers": { "type": "array", "items": { "$ref": "#/$defs/IPoEServer" } }
+          }
+        },
+        "hotspot": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "servers": { "type": "array", "items": { "$ref": "#/$defs/HotspotServer" } },
+            "vouchers": { "type": "array", "items": { "$ref": "#/$defs/HotspotVoucher" } }
+          }
+        },
+        "multi_wan": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "x-daiji-cli": "isp multi-wan enabled",
+              "x-daiji-ui": { "group": "ISP/MultiWAN", "widget": "switch", "label": "Multi-WAN Failover/LB" },
+              "x-daiji-impact": "hot-reload"
+            },
+            "mode": { "type": "string", "enum": ["failover", "load-balance-pcc", "load-balance-ecmp"], "default": "failover" },
+            "sticky_sessions": { "type": "boolean", "default": true },
+            "wans": { "type": "array", "items": { "$ref": "#/$defs/MultiWANLink" } }
+          }
+        }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "netflow": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "version": { "type": "string", "enum": ["netflow-v5", "netflow-v9", "ipfix"], "default": "ipfix" },
+            "active_timeout_sec": { "type": "integer", "minimum": 10, "maximum": 3600, "default": 60 },
+            "sampling_rate": { "type": "integer", "minimum": 1, "maximum": 100000, "default": 1 },
+            "collectors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["host", "port"],
+                "properties": {
+                  "host": { "$ref": "#/$defs/IPAddr" },
+                  "port": { "$ref": "#/$defs/PortNumber", "default": 2055 }
+                }
+              }
+            }
+          }
+        },
+        "snmp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "version": { "type": "string", "enum": ["v1", "v2c", "v3"], "default": "v3" },
+            "listen_address": { "$ref": "#/$defs/IPAddr" },
+            "port": { "$ref": "#/$defs/PortNumber", "default": 161 },
+            "sys_location": { "type": "string", "maxLength": 128 },
+            "sys_contact": { "type": "string", "maxLength": 128 },
+            "community_ro": { "type": "string", "minLength": 4, "maxLength": 64, "x-daiji-secret": true },
+            "community_rw": { "type": "string", "minLength": 4, "maxLength": 64, "x-daiji-secret": true },
+            "v3_users": { "type": "array", "items": { "$ref": "#/$defs/SNMPv3User" } }
+          }
+        },
+        "syslog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled"],
+          "properties": {
+            "enabled": { "type": "boolean", "default": true },
+            "local_buffer_lines": { "type": "integer", "minimum": 100, "maximum": 100000, "default": 5000 },
+            "remote_targets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["host", "port", "proto"],
+                "properties": {
+                  "host": { "type": "string", "minLength": 3, "maxLength": 128 },
+                  "port": { "$ref": "#/$defs/PortNumber", "default": 514 },
+                  "proto": { "type": "string", "enum": ["udp", "tcp", "tls"], "default": "tcp" },
+                  "min_severity": { "type": "string", "enum": ["debug", "info", "notice", "warning", "err", "crit"], "default": "info" }
+                }
+              }
+            }
+          }
+        },
+        "bandwidth_test": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "server_enabled": { "type": "boolean", "default": false },
+            "port": { "$ref": "#/$defs/PortNumber", "default": 2000 },
+            "max_concurrent": { "type": "integer", "minimum": 1, "maximum": 64, "default": 4 },
+            "require_auth": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    },
+    "automation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scripts": { "type": "array", "items": { "$ref": "#/$defs/DaijiScriptDef" } },
+        "schedules": { "type": "array", "items": { "$ref": "#/$defs/ScriptSchedule" } },
+        "event_hooks": { "type": "array", "items": { "$ref": "#/$defs/EventHook" } },
+        "webhooks": { "type": "array", "items": { "$ref": "#/$defs/WebhookTarget" } }
+      }
+    },
+    "updates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "auto_check", "require_signature", "confirm_timeout_sec"],
+      "properties": {
+        "channel": {
+          "type": "string",
+          "enum": ["stable", "lts", "beta"],
+          "default": "stable",
+          "x-daiji-cli": "system update channel",
+          "x-daiji-ui": { "group": "Updates", "widget": "select", "label": "Release Channel" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "auto_check": {
+          "type": "boolean",
+          "default": true,
+          "x-daiji-cli": "system update auto-check",
+          "x-daiji-ui": { "group": "Updates", "widget": "switch", "label": "Automatic Check" },
+          "x-daiji-impact": "hot-reload"
+        },
+        "require_signature": {
+          "type": "boolean",
+          "default": true,
+          "x-daiji-cli": "system update require-signature",
+          "x-daiji-ui": { "group": "Updates", "widget": "switch", "label": "Require Ed25519 Signature" },
+          "x-daiji-rbac": "superadmin",
+          "x-daiji-impact": "hot-reload"
+        },
+        "confirm_timeout_sec": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 1800,
+          "default": 180,
+          "x-daiji-cli": "system update health-timeout",
+          "x-daiji-ui": { "group": "Updates", "widget": "number", "label": "Boot Health Timeout (s)" },
+          "x-daiji-impact": "hot-reload"
+        }
+      }
+    }
+  }
+}

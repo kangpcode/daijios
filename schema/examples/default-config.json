@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.3.0",
+  "system": {
+    "hostname": "daiji-core-01",
+    "domain_name": "infra.daiji.local",
+    "timezone": "Asia/Jakarta",
+    "ntp_servers": [
+      "0.id.pool.ntp.org",
+      "1.id.pool.ntp.org"
+    ],
+    "motd_banner": "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)",
+    "watchdog": {
+      "enabled": true,
+      "timeout_sec": 30,
+      "max_failed_boots": 3
+    },
+    "users": [
+      {
+        "username": "daijiadmin",
+        "role": "superadmin",
+        "password_hash": "$argon2id$v=19$m=65536,t=3,p=2$c2FsdHNhbHQ$9Z2V9Y2F0c2VjcmV0aGFzaA",
+        "mfa_required": true,
+        "enabled": true
+      }
+    ]
+  },
+  "management": {
+    "ssh": {
+      "enabled": true,
+      "port": 22,
+      "password_auth": false,
+      "listen_addresses": ["192.168.88.1"]
+    },
+    "api": {
+      "enabled": true,
+      "port": 8443,
+      "tls_enabled": true
+    },
+    "daiweb": {
+      "enabled": true,
+      "port": 443,
+      "theme": "daiji-dark"
+    },
+    "cloud_link": {
+      "enabled": false
+    }
+  },
+  "interfaces": {
+    "physical": [
+      {
+        "name": "eth0",
+        "description": "Management / Out-of-Band Port",
+        "role": "mgmt",
+        "mtu": 1500,
+        "addresses": ["192.168.88.1/24"],
+        "enabled": true
+      }
+    ]
+  },
+  "ip": {
+    "ipv4_forward": true,
+    "ipv6_forward": true,
+    "rp_filter": 2,
+    "dns": {
+      "enabled": true,
+      "listen_addresses": ["192.168.88.1"],
+      "port": 53,
+      "upstreams": ["1.1.1.1", "8.8.8.8"],
+      "cache_size": 4096,
+      "dnssec": true
+    },
+    "ntp": {
+      "enabled": true,
+      "servers": ["0.id.pool.ntp.org", "1.id.pool.ntp.org"],
+      "server_mode": false
+    }
+  },
+  "switching": {
+    "lldp": {
+      "enabled": true,
+      "tx_interval_sec": 30,
+      "tx_hold": 4,
+      "cdp_compat": true,
+      "med_enabled": true
+    }
+  },
+  "updates": {
+    "channel": "stable",
+    "auto_check": true,
+    "require_signature": true,
+    "confirm_timeout_sec": 180
+  }
+}
