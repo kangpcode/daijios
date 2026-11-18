@@ -21,6 +21,7 @@ import (
 	"github.com/kangpcode/daijios/pkg/configengine"
 	"github.com/kangpcode/daijios/pkg/daijicli"
 	"github.com/kangpcode/daijios/pkg/daijiscript"
+	"github.com/kangpcode/daijios/pkg/daimo"
 	"github.com/kangpcode/daijios/pkg/daiweb"
 	"github.com/kangpcode/daijios/pkg/ispplan"
 	"github.com/kangpcode/daijios/pkg/ispreconcile"
@@ -67,6 +68,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return cmdCLI(args[1:], stdout, stderr)
 	case "web":
 		return cmdWeb(args[1:], stdout, stderr)
+	case "mobile":
+		return cmdMobile(args[1:], stdout, stderr)
 	case "ab":
 		return cmdAB(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
@@ -91,6 +94,7 @@ func printUsage(w io.Writer) {
 		"  daiji-ctl wlan <render-hostapd|render-mesh|render-nft|rrm-solve> --schema <path> --config <path>\n"+
 		"  daiji-ctl cli <export-command-schema|search|exec> [flags]\n"+
 		"  daiji-ctl web check --schema <path> [--json]\n"+
+		"  daiji-ctl mobile qr-onboard --mode <local|cloud> --endpoint <url> [--actor <name>]\n"+
 		"  daiji-ctl ab status --state-dir <dir>\n",
 		sysinfo.BrandBanner,
 	)
@@ -832,5 +836,41 @@ func cmdWeb(args []string, stdout, stderr io.Writer) int {
 		})
 	}
 	fmt.Fprintf(stdout, "DAIWEB CHECK PASS: raw=%dB gzip=%dB ui_fields=%d\n", rawB, gzB, len(fields))
+	return 0
+}
+
+func cmdMobile(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || args[0] != "qr-onboard" {
+		fmt.Fprintln(stderr, "mobile subcommand required: qr-onboard")
+		return 2
+	}
+	fs := flag.NewFlagSet("mobile qr-onboard", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	deviceID := fs.String("device", "daiji-node-01", "device ID")
+	mac := fs.String("mac", "02:64:6a:00:00:01", "device MAC")
+	mode := fs.String("mode", "local", "connection mode: local | cloud")
+	endpoint := fs.String("endpoint", "http://192.168.88.1:8443", "target URL")
+	actor := fs.String("actor", "daijiadmin", "operator actor")
+	role := fs.String("role", "superadmin", "RBAC role")
+	secret := fs.String("secret", "daijios-daimo-qr-secret-phase7", "QR HMAC secret")
+	ttl := fs.Duration("ttl", 5*time.Minute, "QR expiration TTL")
+	if err := fs.Parse(args[1:]); err != nil {
+		return 2
+	}
+	svc, err := daimo.NewService(daimo.Config{
+		DeviceID: *deviceID,
+		MAC:      *mac,
+		QRSecret: []byte(*secret),
+	})
+	if err != nil {
+		fmt.Fprintf(stderr, "init error: %v\n", err)
+		return 1
+	}
+	uri, err := svc.GenerateOnboardingQR(daimo.ConnectionMode(*mode), *endpoint, *role, *actor, *ttl)
+	if err != nil {
+		fmt.Fprintf(stderr, "qr error: %v\n", err)
+		return 1
+	}
+	fmt.Fprintln(stdout, uri)
 	return 0
 }

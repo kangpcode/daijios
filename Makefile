@@ -8,6 +8,7 @@ ISPD := daiji-ispd
 AC := daiji-ac
 SH := daiji-sh
 WEBD := daiji-webd
+DESK := daiji-desk
 PKG := ./cmd/daiji-ctl
 NETD_PKG := ./services/daiji-netd
 FWQOSD_PKG := ./services/daiji-fw-qosd
@@ -15,7 +16,8 @@ ISPD_PKG := ./services/daiji-ispd
 AC_PKG := ./services/daiji-ac
 SH_PKG := ./services/daiji-sh
 WEBD_PKG := ./services/daiji-webd
-VERSION ?= 0.7.0-phase6
+DESK_PKG := ./services/daiji-desk
+VERSION ?= 0.8.0-phase7
 LDFLAGS := -s -w -X github.com/kangpcode/daijios/pkg/sysinfo.Version=$(VERSION)
 
 .PHONY: all build test test-race bench vet check cross-build clean
@@ -30,6 +32,7 @@ build:
 	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(AC) $(AC_PKG)
 	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(SH) $(SH_PKG)
 	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(WEBD) $(WEBD_PKG)
+	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(DESK) $(DESK_PKG)
 
 test:
 	go test -v ./...
@@ -59,6 +62,7 @@ cross-build:
 		env CGO_ENABLED=0 GOOS=linux GOARCH=$$arch $$env_var go build -trimpath -ldflags "$(LDFLAGS)" -o bin/dist/$(AC)-linux-$$suffix $(AC_PKG) || exit 1; \
 		env CGO_ENABLED=0 GOOS=linux GOARCH=$$arch $$env_var go build -trimpath -ldflags "$(LDFLAGS)" -o bin/dist/$(SH)-linux-$$suffix $(SH_PKG) || exit 1; \
 		env CGO_ENABLED=0 GOOS=linux GOARCH=$$arch $$env_var go build -trimpath -ldflags "$(LDFLAGS)" -o bin/dist/$(WEBD)-linux-$$suffix $(WEBD_PKG) || exit 1; \
+		env CGO_ENABLED=0 GOOS=linux GOARCH=$$arch $$env_var go build -trimpath -ldflags "$(LDFLAGS)" -o bin/dist/$(DESK)-linux-$$suffix $(DESK_PKG) || exit 1; \
 	done
 	@ls -lh bin/dist/
 

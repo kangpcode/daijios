@@ -141,4 +141,8 @@ func TestCLIEndToEndPhase0(t *testing.T) {
 	if !strings.Contains(webCheckOut, `"daiji-dark"`) || !strings.Contains(webCheckOut, `"gzip_bytes"`) {
 		t.Fatalf("web check unexpected output:\n%s", webCheckOut)
 	}
+	qrOut := runCmd(0, "mobile", "qr-onboard", "--mode", "local", "--endpoint", "http://192.168.88.1:8443")
+	if !strings.HasPrefix(qrOut, "daijios://onboard?") {
+		t.Fatalf("mobile qr-onboard unexpected output:\n%s", qrOut)
+	}
 }
