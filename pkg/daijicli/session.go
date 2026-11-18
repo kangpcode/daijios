@@ -828,9 +828,9 @@ func (s *Session) ContextualHelp(prefix string) []HelpHint {
 	hasTrailingSpace := strings.HasSuffix(prefix, " ") || strings.HasSuffix(prefix, "\t")
 	toks := splitShellTokens(trimmed)
 	verb := strings.ToLower(toks[0])
-	if !hasTrailingSpace && (verb == "set" || verb == "unset" || verb == "add" || verb == "remove" || verb == "enter") && len(toks) >= 2 {
+	if (verb == "set" || verb == "unset" || verb == "add" || verb == "remove" || verb == "enter") && len(toks) >= 2 {
 		fullPath := s.resolvePath(toks[1])
-		if meta, ok := s.Registry.Nodes[fullPath]; ok {
+		if meta, ok := s.Registry.Nodes[fullPath]; ok && (!hasTrailingSpace || len(meta.Enum) == 0) {
 			desc := meta.Description
 			if len(meta.Enum) > 0 {
 				desc += fmt.Sprintf(" [enum: %s]", strings.Join(meta.Enum, "|"))
