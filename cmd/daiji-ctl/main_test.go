@@ -145,4 +145,16 @@ func TestCLIEndToEndPhase0(t *testing.T) {
 	if !strings.HasPrefix(qrOut, "daijios://onboard?") {
 		t.Fatalf("mobile qr-onboard unexpected output:\n%s", qrOut)
 	}
+	acsOut := runCmd(0, "acs", "templates", "--json")
+	if !strings.Contains(acsOut, "huawei-ont-v1") || !strings.Contains(acsOut, "zte-igd-v1") {
+		t.Fatalf("acs templates unexpected output:\n%s", acsOut)
+	}
+	billOut := runCmd(0, "billing", "simulate-cycle", "--json")
+	if !strings.Contains(billOut, `"collected_cents": 222000`) {
+		t.Fatalf("billing simulate-cycle unexpected output:\n%s", billOut)
+	}
+	cloudOut := runCmd(0, "cloud", "dr-check", "--json")
+	if !strings.Contains(cloudOut, `"dr_verified": true`) {
+		t.Fatalf("cloud dr-check unexpected output:\n%s", cloudOut)
+	}
 }

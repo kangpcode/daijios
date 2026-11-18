@@ -277,12 +277,17 @@ func (m *SessionManager) HandleCoAPacket(req *RADIUSPacket) (bool, string) {
 		target.Isolated = true
 		target.DownloadKbps = 64
 		target.UploadKbps = 64
+	} else if strings.EqualFold(filter, "ACTIVE") || strings.EqualFold(filter, "NORMAL") {
+		target.Isolated = false
 	}
 	if rateExpr := req.GetDaijiRateLimit(); rateExpr != "" {
 		var up, down int
 		if _, err := fmt.Sscanf(rateExpr, "%d/%d", &up, &down); err == nil && up > 0 && down > 0 {
 			target.UploadKbps = up
 			target.DownloadKbps = down
+			if !strings.EqualFold(req.GetString(AttrFilterID), "ISOLIR") {
+				target.Isolated = false
+			}
 		}
 	}
 	return true, "coa applied"

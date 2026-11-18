@@ -19,7 +19,10 @@ import (
 
 	"github.com/kangpcode/daijios/pkg/abupdate"
 	"github.com/kangpcode/daijios/pkg/configengine"
+	"github.com/kangpcode/daijios/pkg/daijiacs"
+	"github.com/kangpcode/daijios/pkg/daijibilling"
 	"github.com/kangpcode/daijios/pkg/daijicli"
+	"github.com/kangpcode/daijios/pkg/daijicloud"
 	"github.com/kangpcode/daijios/pkg/daijiscript"
 	"github.com/kangpcode/daijios/pkg/daimo"
 	"github.com/kangpcode/daijios/pkg/daiweb"
@@ -70,6 +73,12 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return cmdWeb(args[1:], stdout, stderr)
 	case "mobile":
 		return cmdMobile(args[1:], stdout, stderr)
+	case "acs":
+		return cmdACS(args[1:], stdout, stderr)
+	case "billing":
+		return cmdBilling(args[1:], stdout, stderr)
+	case "cloud":
+		return cmdCloud(args[1:], stdout, stderr)
 	case "ab":
 		return cmdAB(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
@@ -95,6 +104,9 @@ func printUsage(w io.Writer) {
 		"  daiji-ctl cli <export-command-schema|search|exec> [flags]\n"+
 		"  daiji-ctl web check --schema <path> [--json]\n"+
 		"  daiji-ctl mobile qr-onboard --mode <local|cloud> --endpoint <url> [--actor <name>]\n"+
+		"  daiji-ctl acs templates [--json]\n"+
+		"  daiji-ctl billing simulate-cycle [--json]\n"+
+		"  daiji-ctl cloud dr-check [--json]\n"+
 		"  daiji-ctl ab status --state-dir <dir>\n",
 		sysinfo.BrandBanner,
 	)
@@ -872,5 +884,104 @@ func cmdMobile(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	fmt.Fprintln(stdout, uri)
+	return 0
+}
+
+func cmdACS(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || args[0] != "templates" {
+		fmt.Fprintln(stderr, "acs subcommand required: templates")
+		return 2
+	}
+	fs := flag.NewFlagSet("acs templates", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	jsonOut := fs.Bool("json", false, "output JSON")
+	if err := fs.Parse(args[1:]); err != nil {
+		return 2
+	}
+	tpls := daijiacs.DefaultVendorTemplates()
+	if *jsonOut {
+		return writeJSONOut(stdout, tpls)
+	}
+	for _, tp := range tpls {
+		fmt.Fprintf(stdout, "%-20s %-10s optical=%s\n", tp.ID, tp.RootModel, tp.OpticalRxPath)
+	}
+	return 0
+}
+
+func cmdBilling(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || args[0] != "simulate-cycle" {
+		fmt.Fprintln(stderr, "billing subcommand required: simulate-cycle")
+		return 2
+	}
+	fs := flag.NewFlagSet("billing simulate-cycle", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	jsonOut := fs.Bool("json", false, "output JSON summary")
+	if err := fs.Parse(args[1:]); err != nil {
+		return 2
+	}
+
+	simNow := time.Date(2026, 11, 1, 9, 0, 0, 0, time.UTC)
+	eng := daijibilling.NewEngine(daijibilling.Options{Now: func() time.Time { return simNow }})
+	_ = eng.AddReseller(daijibilling.Reseller{ID: "res-01", Name: "Reseller Utama", CommissionPct: 10, Active: true}, "cli")
+	_ = eng.AddPlan(daijibilling.ServicePlan{ID: "fiber-50m", Name: "Fiber 50M", MonthlyPriceCents: 200000, TaxRatePct: 11, GraceDays: 7, LateFeeCents: 10000}, "cli")
+	_ = eng.AddCustomer(daijibilling.Customer{
+		ID: "cust-01", Name: "Demo Customer", Phone: "+62811111111", Email: "demo@daiji.id",
+		PPPoEUsername: "demo@daiji", ResellerID: "res-01", PlanID: "fiber-50m",
+		CycleType: daijibilling.CycleFixedDay, ActivatedAt: simNow, PPPoEActive: true,
+	}, "cli")
+	invs, err := eng.GenerateMonthlyInvoices("cli")
+	if err != nil || len(invs) == 0 {
+		fmt.Fprintf(stderr, "billing simulation failed: %v\n", err)
+		return 1
+	}
+	if _, err := eng.MarkInvoicePaid(invs[0].ID, "qris", "cli-qris-001", invs[0].TotalCents, "cli"); err != nil {
+		fmt.Fprintf(stderr, "payment settle failed: %v\n", err)
+		return 1
+	}
+	rep := eng.GenerateFinancialReport("2026-11")
+	if *jsonOut {
+		return writeJSONOut(stdout, rep)
+	}
+	fmt.Fprintf(stdout, "DAIJI-BILLING SIM OK: invoices=%d collected=%d tax=%d\n", rep.PaidInvoices, rep.CollectedCents, rep.TaxTotalCents)
+	return 0
+}
+
+func cmdCloud(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || args[0] != "dr-check" {
+		fmt.Fprintln(stderr, "cloud subcommand required: dr-check")
+		return 2
+	}
+	fs := flag.NewFlagSet("cloud dr-check", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	jsonOut := fs.Bool("json", false, "output JSON")
+	if err := fs.Parse(args[1:]); err != nil {
+		return 2
+	}
+
+	cp := daijicloud.NewControlPlane(nil, nil, nil)
+	_ = cp.CreateOrganization(daijicloud.Organization{ID: "org-dr", Name: "DR Verify"})
+	_ = cp.CreateSite(daijicloud.Site{ID: "site-1", OrgID: "org-dr", Name: "Primary POP"})
+	tok, _ := cp.CreateZTPClaimToken("org-dr", "site-1", "CLI-SN01", "edge", time.Hour)
+	_, _ = cp.AdoptViaZTP(tok, "CLI-SN01", "02:64:6a:00:00:01", "cli-node", "amd64", "1.1.0")
+	snap, err := cp.ExportDisasterRecoverySnapshot()
+	if err != nil {
+		fmt.Fprintf(stderr, "DR export failed: %v\n", err)
+		return 1
+	}
+	standby := daijicloud.NewControlPlane(nil, nil, nil)
+	if err := standby.RestoreDisasterRecoverySnapshot(snap); err != nil {
+		fmt.Fprintf(stderr, "DR restore failed: %v\n", err)
+		return 1
+	}
+	if *jsonOut {
+		return writeJSONOut(stdout, map[string]any{
+			"brand":       sysinfo.BrandBanner,
+			"dr_verified": true,
+			"orgs":        len(snap.Orgs),
+			"sites":       len(snap.Sites),
+			"devices":     len(snap.Devices),
+		})
+	}
+	fmt.Fprintf(stdout, "DAIJICLOUD DR CHECK PASS: orgs=%d sites=%d devices=%d\n", len(snap.Orgs), len(snap.Sites), len(snap.Devices))
 	return 0
 }
