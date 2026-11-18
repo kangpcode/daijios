@@ -1040,11 +1040,35 @@ func cmdPortal(args []string, stdout, stderr io.Writer) int {
 
 func cmdRelease(args []string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "release subcommand required: manifest | verify | soak")
+		fmt.Fprintln(stderr, "release subcommand required: keygen | manifest | verify | soak")
 		return 2
 	}
 	sub := args[0]
 	switch sub {
+	case "keygen":
+		fs := flag.NewFlagSet("release keygen", flag.ContinueOnError)
+		fs.SetOutput(stderr)
+		outPriv := fs.String("out", "daijios-release.key.pem", "output PKCS#8 PEM private key path")
+		outPub := fs.String("pub-out", "daijios-release.pub.pem", "output PKIX PEM public key path")
+		jsonOut := fs.Bool("json", false, "output JSON")
+		if err := fs.Parse(args[1:]); err != nil {
+			return 2
+		}
+		pub, _, err := daijirelease.GenerateSigningKeypairPEM(*outPriv, *outPub)
+		if err != nil {
+			fmt.Fprintf(stderr, "keygen error: %v\n", err)
+			return 1
+		}
+		if *jsonOut {
+			return writeJSONOut(stdout, map[string]any{
+				"private_key":    *outPriv,
+				"public_key":     *outPub,
+				"ed25519_pub_hex": hex.EncodeToString(pub),
+			})
+		}
+		fmt.Fprintf(stdout, "ED25519 RELEASE KEYPAIR GENERATED: priv=%s pub=%s pub_hex=%s\n", *outPriv, *outPub, hex.EncodeToString(pub))
+		return 0
+
 	case "soak":
 		fs := flag.NewFlagSet("release soak", flag.ContinueOnError)
 		fs.SetOutput(stderr)
@@ -1071,6 +1095,7 @@ func cmdRelease(args []string, stdout, stderr io.Writer) int {
 		dir := fs.String("dir", "bin/dist", "artifact directory")
 		outDir := fs.String("out", "bin/release", "output directory for manifest.json & SHA256SUMS")
 		ver := fs.String("version", sysinfo.Version, "release version")
+		keyFile := fs.String("key-file", "", "optional persistent Ed25519 private key (PKCS#8 PEM or hex)")
 		jsonOut := fs.Bool("json", false, "output JSON")
 		if err := fs.Parse(args[1:]); err != nil {
 			return 2
@@ -1080,10 +1105,19 @@ func cmdRelease(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "build manifest error: %v\n", err)
 			return 1
 		}
-		_, priv, err := ed25519.GenerateKey(rand.Reader)
-		if err != nil {
-			fmt.Fprintf(stderr, "keygen error: %v\n", err)
-			return 1
+		var priv ed25519.PrivateKey
+		if *keyFile != "" {
+			priv, err = daijirelease.LoadPrivateKeyPEM(*keyFile)
+			if err != nil {
+				fmt.Fprintf(stderr, "load key-file error: %v\n", err)
+				return 1
+			}
+		} else {
+			_, priv, err = ed25519.GenerateKey(rand.Reader)
+			if err != nil {
+				fmt.Fprintf(stderr, "keygen error: %v\n", err)
+				return 1
+			}
 		}
 		if err := daijirelease.SignManifest(priv, m); err != nil {
 			fmt.Fprintf(stderr, "sign manifest error: %v\n", err)
@@ -1105,15 +1139,16 @@ func cmdRelease(args []string, stdout, stderr io.Writer) int {
 		}
 		if *jsonOut {
 			return writeJSONOut(stdout, map[string]any{
-				"brand":     m.Brand,
-				"version":   m.Version,
-				"artifacts": len(m.Artifacts),
-				"manifest":  manifestPath,
-				"sums":      sumsPath,
-				"lts_until": m.LTS.ActiveUntil,
+				"brand":          m.Brand,
+				"version":        m.Version,
+				"artifacts":      len(m.Artifacts),
+				"manifest":       manifestPath,
+				"sums":           sumsPath,
+				"lts_until":      m.LTS.ActiveUntil,
+				"persistent_key": *keyFile != "",
 			})
 		}
-		fmt.Fprintf(stdout, "RELEASE MANIFEST SIGNED: version=%s artifacts=%d out=%s\n", m.Version, len(m.Artifacts), *outDir)
+		fmt.Fprintf(stdout, "RELEASE MANIFEST SIGNED: version=%s artifacts=%d persistent_key=%v out=%s\n", m.Version, len(m.Artifacts), *keyFile != "", *outDir)
 		return 0
 
 	case "verify":
@@ -1122,6 +1157,7 @@ func cmdRelease(args []string, stdout, stderr io.Writer) int {
 		dir := fs.String("dir", "bin/dist", "artifact directory")
 		manifestPath := fs.String("manifest", "bin/release/manifest.json", "manifest.json path")
 		sumsPath := fs.String("sums", "bin/release/SHA256SUMS", "SHA256SUMS path")
+		pubFile := fs.String("pub-file", "", "optional pinned Ed25519 public key (PKIX PEM or hex)")
 		if err := fs.Parse(args[1:]); err != nil {
 			return 2
 		}
@@ -1135,12 +1171,22 @@ func cmdRelease(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "parse manifest error: %v\n", err)
 			return 1
 		}
-		pubBytes, err := hex.DecodeString(m.PublicKey)
-		if err != nil {
-			fmt.Fprintf(stderr, "decode public key error: %v\n", err)
-			return 1
+		var verifyPub ed25519.PublicKey
+		if *pubFile != "" {
+			verifyPub, err = daijirelease.LoadPublicKeyPEM(*pubFile)
+			if err != nil {
+				fmt.Fprintf(stderr, "load pub-file error: %v\n", err)
+				return 1
+			}
+		} else {
+			pubBytes, err := hex.DecodeString(m.PublicKey)
+			if err != nil {
+				fmt.Fprintf(stderr, "decode public key error: %v\n", err)
+				return 1
+			}
+			verifyPub = ed25519.PublicKey(pubBytes)
 		}
-		if err := daijirelease.VerifyManifest(ed25519.PublicKey(pubBytes), m); err != nil {
+		if err := daijirelease.VerifyManifest(verifyPub, m); err != nil {
 			fmt.Fprintf(stderr, "manifest verify failed: %v\n", err)
 			return 1
 		}
@@ -1149,7 +1195,7 @@ func cmdRelease(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "checksum verify failed: %v\n", err)
 			return 1
 		}
-		fmt.Fprintf(stdout, "RELEASE VERIFIED: version=%s ed25519=OK checksums=%d\n", m.Version, cnt)
+		fmt.Fprintf(stdout, "RELEASE VERIFIED: version=%s ed25519=OK pinned_pub=%v checksums=%d\n", m.Version, *pubFile != "", cnt)
 		return 0
 
 	default:

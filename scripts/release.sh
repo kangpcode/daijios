@@ -19,15 +19,16 @@ fi
 rm -rf "$REL_DIR"
 mkdir -p "$REL_DIR"
 
-./bin/daiji-ctl release manifest \
-  --dir ./bin/dist \
-  --out "$REL_DIR" \
-  --version "$VERSION" \
-  --json
+SIGN_ARGS=(--dir ./bin/dist --out "$REL_DIR" --version "$VERSION" --json)
+if [ -n "${DAIJI_RELEASE_KEY_FILE:-}" ]; then
+  SIGN_ARGS+=(--key-file "$DAIJI_RELEASE_KEY_FILE")
+fi
+./bin/daiji-ctl release manifest "${SIGN_ARGS[@]}"
 
-./bin/daiji-ctl release verify \
-  --dir ./bin/dist \
-  --manifest "$REL_DIR/manifest.json" \
-  --sums "$REL_DIR/SHA256SUMS"
+VERIFY_ARGS=(--dir ./bin/dist --manifest "$REL_DIR/manifest.json" --sums "$REL_DIR/SHA256SUMS")
+if [ -n "${DAIJI_RELEASE_PUB_FILE:-}" ]; then
+  VERIFY_ARGS+=(--pub-file "$DAIJI_RELEASE_PUB_FILE")
+fi
+./bin/daiji-ctl release verify "${VERIFY_ARGS[@]}"
 
 echo "Release bundle ready in $REL_DIR"
