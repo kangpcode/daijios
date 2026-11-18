@@ -12,6 +12,7 @@ DESK := daiji-desk
 ACSD := daiji-acsd
 BILLINGD := daiji-billingd
 CLOUDD := daiji-cloudd
+PORTALD := daiji-portald
 PKG := ./cmd/daiji-ctl
 NETD_PKG := ./services/daiji-netd
 FWQOSD_PKG := ./services/daiji-fw-qosd
@@ -23,7 +24,8 @@ DESK_PKG := ./services/daiji-desk
 ACSD_PKG := ./services/daiji-acsd
 BILLINGD_PKG := ./services/daiji-billingd
 CLOUDD_PKG := ./services/daiji-cloudd
-VERSION ?= 1.1.0-phase10
+PORTALD_PKG := ./services/daiji-portald
+VERSION ?= 1.2.0-phase11
 LDFLAGS := -s -w -X github.com/kangpcode/daijios/pkg/sysinfo.Version=$(VERSION)
 
 .PHONY: all build test test-race bench vet check cross-build clean
@@ -42,6 +44,7 @@ build:
 	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(ACSD) $(ACSD_PKG)
 	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(BILLINGD) $(BILLINGD_PKG)
 	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(CLOUDD) $(CLOUDD_PKG)
+	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/$(PORTALD) $(PORTALD_PKG)
 
 test:
 	go test -v ./...
@@ -75,6 +78,7 @@ cross-build:
 		env CGO_ENABLED=0 GOOS=linux GOARCH=$$arch $$env_var go build -trimpath -ldflags "$(LDFLAGS)" -o bin/dist/$(ACSD)-linux-$$suffix $(ACSD_PKG) || exit 1; \
 		env CGO_ENABLED=0 GOOS=linux GOARCH=$$arch $$env_var go build -trimpath -ldflags "$(LDFLAGS)" -o bin/dist/$(BILLINGD)-linux-$$suffix $(BILLINGD_PKG) || exit 1; \
 		env CGO_ENABLED=0 GOOS=linux GOARCH=$$arch $$env_var go build -trimpath -ldflags "$(LDFLAGS)" -o bin/dist/$(CLOUDD)-linux-$$suffix $(CLOUDD_PKG) || exit 1; \
+		env CGO_ENABLED=0 GOOS=linux GOARCH=$$arch $$env_var go build -trimpath -ldflags "$(LDFLAGS)" -o bin/dist/$(PORTALD)-linux-$$suffix $(PORTALD_PKG) || exit 1; \
 	done
 	@ls -lh bin/dist/
 

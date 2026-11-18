@@ -157,4 +157,8 @@ func TestCLIEndToEndPhase0(t *testing.T) {
 	if !strings.Contains(cloudOut, `"dr_verified": true`) {
 		t.Fatalf("cloud dr-check unexpected output:\n%s", cloudOut)
 	}
+	portalOut := runCmd(0, "portal", "license-demo", "--json")
+	if !strings.Contains(portalOut, `"DJLIC1.`) || !strings.Contains(portalOut, `"enterprise"`) {
+		t.Fatalf("portal license-demo unexpected output:\n%s", portalOut)
+	}
 }

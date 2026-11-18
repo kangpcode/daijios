@@ -23,6 +23,7 @@ import (
 	"github.com/kangpcode/daijios/pkg/daijibilling"
 	"github.com/kangpcode/daijios/pkg/daijicli"
 	"github.com/kangpcode/daijios/pkg/daijicloud"
+	"github.com/kangpcode/daijios/pkg/daijiportal"
 	"github.com/kangpcode/daijios/pkg/daijiscript"
 	"github.com/kangpcode/daijios/pkg/daimo"
 	"github.com/kangpcode/daijios/pkg/daiweb"
@@ -79,6 +80,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return cmdBilling(args[1:], stdout, stderr)
 	case "cloud":
 		return cmdCloud(args[1:], stdout, stderr)
+	case "portal":
+		return cmdPortal(args[1:], stdout, stderr)
 	case "ab":
 		return cmdAB(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
@@ -107,6 +110,7 @@ func printUsage(w io.Writer) {
 		"  daiji-ctl acs templates [--json]\n"+
 		"  daiji-ctl billing simulate-cycle [--json]\n"+
 		"  daiji-ctl cloud dr-check [--json]\n"+
+		"  daiji-ctl portal license-demo [--json]\n"+
 		"  daiji-ctl ab status --state-dir <dir>\n",
 		sysinfo.BrandBanner,
 	)
@@ -983,5 +987,46 @@ func cmdCloud(args []string, stdout, stderr io.Writer) int {
 		})
 	}
 	fmt.Fprintf(stdout, "DAIJICLOUD DR CHECK PASS: orgs=%d sites=%d devices=%d\n", len(snap.Orgs), len(snap.Sites), len(snap.Devices))
+	return 0
+}
+
+func cmdPortal(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || args[0] != "license-demo" {
+		fmt.Fprintln(stderr, "portal subcommand required: license-demo")
+		return 2
+	}
+	fs := flag.NewFlagSet("portal license-demo", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	jsonOut := fs.Bool("json", false, "output JSON")
+	hwID := fs.String("hw", "HW-DAIJIOS-001", "hardware fingerprint ID")
+	if err := fs.Parse(args[1:]); err != nil {
+		return 2
+	}
+
+	portal, err := daijiportal.NewPortal(nil, nil)
+	if err != nil {
+		fmt.Fprintf(stderr, "portal error: %v\n", err)
+		return 1
+	}
+	inv, lic, err := portal.PurchaseLicense("org-demo", "official", "sku-ent", *hwID, 10, 12)
+	if err != nil {
+		fmt.Fprintf(stderr, "purchase error: %v\n", err)
+		return 1
+	}
+	verified, err := daijiportal.VerifyOfflineLicense(portal.PublicKey(), lic.OfflineBlob, *hwID, "multi-tenant", 5, time.Now())
+	if err != nil {
+		fmt.Fprintf(stderr, "offline verify error: %v\n", err)
+		return 1
+	}
+	if *jsonOut {
+		return writeJSONOut(stdout, map[string]any{
+			"brand":        sysinfo.BrandBanner,
+			"invoice_id":   inv.ID,
+			"license_id":   verified.LicenseID,
+			"tier":         verified.Tier,
+			"offline_blob": lic.OfflineBlob,
+		})
+	}
+	fmt.Fprintf(stdout, "DAIJIPORTAL ED25519 VERIFIED: license=%s tier=%s devices=%d\n", verified.LicenseID, verified.Tier, verified.MaxDevices)
 	return 0
 }
