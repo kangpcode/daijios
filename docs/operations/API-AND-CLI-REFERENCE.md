@@ -41,8 +41,8 @@
 Seluruh endpoint mutasi wajib menyertakan `Authorization: Bearer <JWT>` (`pkg/secauth.TokenManager`) yang diperiksa oleh `RBACPolicy` (`superadmin`, `netadmin`, `operator`, `readonly`):
 
 - **DaiWeb (`:8443`):** `/api/v1/health`, `/api/v1/telemetry`, `/api/v1/topology`, `/api/v1/wizard/apply`, `/api/v1/ws` (WebSocket telemetry/CLI).
-- **DaiDesk (`:8080`):** `/api/v1/desk/sessions`, `/api/v1/desk/discover` (`DJDP1`), `/api/v1/desk/files`, `/api/v1/desk/bulk-apply`.
+- **DaiDesk (`daiji-desk` CLI / SSH+SFTP / DJDP1 UDP `:56780`):** subperintah `discover`, `qr-onboard`, `banner`.
 - **DaijiACS (`:7547`):** `/cwmp` (SOAP TR-069), `/usp` (JSON TR-369), `/api/v1/acs/devices`, `/api/v1/acs/tasks`, `/api/v1/acs/wifi`.
-- **DaijiBilling (`:8060`):** `/api/v1/billing/{customers,plans,invoices,reconcile}`, `/api/v1/billing/webhooks/{midtrans,xendit,qris}`, `/api/v1/billing/portal/{id}`.
-- **DaijiCloud (`:8050`):** `/api/v1/cloud/{orgs,sites,ztp/claim,ztp/adopt,devices,telemetry,rollouts,dr/snapshot}`, `/metrics`.
+- **DaijiBilling (`:8090`):** `/api/v1/billing/{customers,plans,invoices,reconcile}`, `/api/v1/billing/webhooks/{midtrans,xendit,qris}`, `/api/v1/billing/portal/{id}`.
+- **DaijiCloud (`:8080`):** `/api/v1/cloud/{orgs,sites,ztp/claim,ztp/adopt,devices,telemetry,rollouts,dr/snapshot}`, `/metrics`.
 - **DaijiPortal (`:8070`):** `/api/v1/portal/{health,branding,marketplace,licenses/trial,licenses/purchase,licenses/activate-online,updates,tickets,kb}`.

@@ -8,28 +8,40 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-echo "[HIL-SMOKE] Verifying host amd64 daemons & CLI..."
-for bin in \
-  ./bin/daiji-netd \
-  ./bin/daiji-fw-qosd \
-  ./bin/daiji-ispd \
-  ./bin/daiji-ac \
-  ./bin/daiji-webd \
-  ./bin/daiji-desk \
-  ./bin/daiji-acsd \
-  ./bin/daiji-billingd \
-  ./bin/daiji-cloudd \
-  ./bin/daiji-portald
-do
-  "$bin" --check >/dev/null
-  echo "  PASS check: $bin"
-done
+TMP_STORE="$(mktemp -d)"
+trap 'rm -rf "$TMP_STORE"' EXIT
+
+./bin/daiji-ctl config init --store "$TMP_STORE/cfg" --schema schema/daijios.schema.json --bootstrap schema/examples/default-config.json >/dev/null
+
+echo "[HIL-SMOKE] Verifying host amd64 daemons, shell & CLI..."
+./bin/daiji-netd --dry-run --once --store "$TMP_STORE/cfg" --state "$TMP_STORE/netd.state" >/dev/null
+echo "  PASS check: ./bin/daiji-netd"
+./bin/daiji-fw-qosd --dry-run --store "$TMP_STORE/cfg" >/dev/null
+echo "  PASS check: ./bin/daiji-fw-qosd"
+./bin/daiji-ispd --dry-run --store "$TMP_STORE/cfg" >/dev/null
+echo "  PASS check: ./bin/daiji-ispd"
+./bin/daiji-ac --dry-run --store "$TMP_STORE/cfg" >/dev/null
+echo "  PASS check: ./bin/daiji-ac"
+./bin/daiji-sh --store "$TMP_STORE/cfg" --cmd "show version" --quiet >/dev/null
+echo "  PASS check: ./bin/daiji-sh"
+./bin/daiji-webd --check --store "$TMP_STORE/cfg" >/dev/null
+echo "  PASS check: ./bin/daiji-webd"
+./bin/daiji-desk banner >/dev/null
+echo "  PASS check: ./bin/daiji-desk"
+./bin/daiji-acsd --check >/dev/null
+echo "  PASS check: ./bin/daiji-acsd"
+./bin/daiji-billingd --check >/dev/null
+echo "  PASS check: ./bin/daiji-billingd"
+./bin/daiji-cloudd --check >/dev/null
+echo "  PASS check: ./bin/daiji-cloudd"
+./bin/daiji-portald --check >/dev/null
+echo "  PASS check: ./bin/daiji-portald"
 
 ./bin/daiji-ctl about --json >/dev/null
 ./bin/daiji-ctl schema validate --schema schema/daijios.schema.json --config schema/examples/default-config.json >/dev/null
 ./bin/daiji-ctl portal license-demo --json >/dev/null
 ./bin/daiji-ctl release soak --json >/dev/null
-echo "  PASS daiji-ctl E2E probes"
+echo "  PASS check: ./bin/daiji-ctl (all E2E probes)"
 
 echo "[HIL-SMOKE] Inspecting cross-compiled multi-arch artifacts in bin/dist..."
 DIST_COUNT=$(ls -1 bin/dist | wc -l)

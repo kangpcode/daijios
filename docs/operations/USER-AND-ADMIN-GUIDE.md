@@ -34,10 +34,10 @@ DaijiOS dikompilasi statis (`CGO_ENABLED=0`) tanpa dependensi runtime eksternal 
 - **ISP Core (`daiji-ispd`):** PPPoE BNG, IPoE, Hotspot voucher/captive portal, RADIUS AAA/CoA, Multi-WAN failover, SNMP v1/2c/3, IPFIX, dan otomasi `DaijiScript`.
 - **Wireless Controller (`daiji-ac`):** Manajemen AP, roaming `802.11k/v/r`, auto-RF channel/power, WPA2/WPA3 Enterprise, serta mesh ZTP onboarding.
 - **DaiWeb (`daiji-webd` `:8443`):** Dashboard real-time via WebSocket, topologi, wizard konfigurasi, dan browser CLI.
-- **Daimo & DaiDesk (`daiji-desk` `:8080`):** Onboarding QR (`local`/`cloud`), penemuan tetangga L2 `DJDP1` (MAC discovery port UDP `56780`), manajemen multi-tab, SFTP jailed file manager, dan bulk config.
+- **Daimo & DaiDesk (`daiji-desk`):** Onboarding QR (`local`/`cloud`), penemuan tetangga L2 `DJDP1` (MAC discovery port UDP `56780`), manajemen multi-tab, SFTP jailed file manager, dan bulk config.
 - **DaijiACS (`daiji-acsd` `:7547`):** Manajemen TR-069 (CWMP SOAP) & TR-369 (USP) untuk ZTE, Huawei, FiberHome, dan TR-181 standar.
-- **DaijiBilling (`daiji-billingd` `:8060`):** Siklus tagihan tetap/anniversary + prorata, auto-isolir CoA `ISOLIR`/`ACTIVE`, rekonsiliasi webhook Midtrans/Xendit/QRIS, dan ledger SHA-256 immutable.
-- **DaijiCloud (`daiji-cloudd` `:8050`):** Kontrol multi-tenant `Org → Site → Device`, ZTP token adoption, canary rollout, alert telemetry, dan DR snapshot restore.
+- **DaijiBilling (`daiji-billingd` `:8090`):** Siklus tagihan tetap/anniversary + prorata, auto-isolir CoA `ISOLIR`/`ACTIVE`, rekonsiliasi webhook Midtrans/Xendit/QRIS, dan ledger SHA-256 immutable.
+- **DaijiCloud (`daiji-cloudd` `:8080`):** Kontrol multi-tenant `Org → Site → Device`, ZTP token adoption, canary rollout, alert telemetry, dan DR snapshot restore.
 - **DaijiPortal (`daiji-portald` `:8070`):** White-label branding reseller, marketplace SKU/invoice, aktivasi online & offline Ed25519 (`DJLIC1.*`), distribusi update signed, tiket, dan KB dwibahasa.
 
 ---
