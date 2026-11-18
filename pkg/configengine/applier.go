@@ -73,22 +73,47 @@ func InvertDiff(diffs []DiffEntry) []DiffEntry {
 	return inv
 }
 
-// RedactDiff masks sensitive values identified by secretCheck before printing or logging.
+// RedactDiff recursively masks sensitive values identified by secretCheck before printing or logging.
 func RedactDiff(diffs []DiffEntry, secretCheck func(path string) bool) []DiffEntry {
 	out := make([]DiffEntry, len(diffs))
 	for i, d := range diffs {
 		cp := d
-		if secretCheck != nil && secretCheck(d.Path) {
-			if cp.OldValue != nil {
-				cp.OldValue = "***REDACTED***"
-			}
-			if cp.NewValue != nil {
-				cp.NewValue = "***REDACTED***"
-			}
+		if secretCheck != nil {
+			cp.OldValue = redactValueAt(d.Path, cp.OldValue, secretCheck)
+			cp.NewValue = redactValueAt(d.Path, cp.NewValue, secretCheck)
 		}
 		out[i] = cp
 	}
 	return out
+}
+
+func redactValueAt(path string, v any, secretCheck func(path string) bool) any {
+	if v == nil {
+		return nil
+	}
+	if secretCheck(path) {
+		return "***REDACTED***"
+	}
+	switch x := v.(type) {
+	case map[string]any:
+		cp := make(map[string]any, len(x))
+		for k, val := range x {
+			childPath := k
+			if path != "" {
+				childPath = path + "." + k
+			}
+			cp[k] = redactValueAt(childPath, val, secretCheck)
+		}
+		return cp
+	case []any:
+		cp := make([]any, len(x))
+		for idx, val := range x {
+			cp[idx] = redactValueAt(fmt.Sprintf("%s[%d]", path, idx), val, secretCheck)
+		}
+		return cp
+	default:
+		return v
+	}
 }
 
 // FormatDiff renders human-readable Junos/DaijiOS style configuration diffs.

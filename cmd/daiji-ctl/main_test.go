@@ -137,4 +137,8 @@ func TestCLIEndToEndPhase0(t *testing.T) {
 	if !strings.Contains(cliExecOut, "rename via cli") {
 		t.Fatalf("cli exec unexpected output:\n%s", cliExecOut)
 	}
+	webCheckOut := runCmd(0, "web", "check", "--schema", schemaPath, "--json")
+	if !strings.Contains(webCheckOut, `"daiji-dark"`) || !strings.Contains(webCheckOut, `"gzip_bytes"`) {
+		t.Fatalf("web check unexpected output:\n%s", webCheckOut)
+	}
 }

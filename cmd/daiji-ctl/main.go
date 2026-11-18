@@ -21,6 +21,7 @@ import (
 	"github.com/kangpcode/daijios/pkg/configengine"
 	"github.com/kangpcode/daijios/pkg/daijicli"
 	"github.com/kangpcode/daijios/pkg/daijiscript"
+	"github.com/kangpcode/daijios/pkg/daiweb"
 	"github.com/kangpcode/daijios/pkg/ispplan"
 	"github.com/kangpcode/daijios/pkg/ispreconcile"
 	"github.com/kangpcode/daijios/pkg/isptools"
@@ -64,6 +65,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return cmdWLAN(args[1:], stdout, stderr)
 	case "cli":
 		return cmdCLI(args[1:], stdout, stderr)
+	case "web":
+		return cmdWeb(args[1:], stdout, stderr)
 	case "ab":
 		return cmdAB(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
@@ -87,6 +90,7 @@ func printUsage(w io.Writer) {
 		"  daiji-ctl isp <render-accel|render-mwan|render-snmp|run-script|bw-test> --schema <path> --config <path>\n"+
 		"  daiji-ctl wlan <render-hostapd|render-mesh|render-nft|rrm-solve> --schema <path> --config <path>\n"+
 		"  daiji-ctl cli <export-command-schema|search|exec> [flags]\n"+
+		"  daiji-ctl web check --schema <path> [--json]\n"+
 		"  daiji-ctl ab status --state-dir <dir>\n",
 		sysinfo.BrandBanner,
 	)
@@ -787,4 +791,46 @@ func cmdCLI(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "unknown cli subcommand %q\n", sub)
 		return 2
 	}
+}
+
+func cmdWeb(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 || args[0] != "check" {
+		fmt.Fprintln(stderr, "web subcommand required: check")
+		return 2
+	}
+	fs := flag.NewFlagSet("web check", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	schemaPath := fs.String("schema", "schema/daijios.schema.json", "path to DaijiOS schema JSON")
+	jsonOut := fs.Bool("json", false, "output JSON summary")
+	if err := fs.Parse(args[1:]); err != nil {
+		return 2
+	}
+	cs, err := schema.LoadFile(*schemaPath)
+	if err != nil {
+		fmt.Fprintf(stderr, "error loading schema: %v\n", err)
+		return 1
+	}
+	srv, err := daiweb.NewServer(daiweb.Dependencies{Schema: cs})
+	if err != nil {
+		fmt.Fprintf(stderr, "error initializing daiweb: %v\n", err)
+		return 1
+	}
+	rawB, gzB := srv.AssetBundleStats()
+	fields, err := cs.ExtractUISchema()
+	if err != nil {
+		fmt.Fprintf(stderr, "error extracting UI schema: %v\n", err)
+		return 1
+	}
+	if *jsonOut {
+		return writeJSONOut(stdout, map[string]any{
+			"brand":        sysinfo.BrandBanner,
+			"raw_bytes":    rawB,
+			"gzip_bytes":   gzB,
+			"ui_fields":    len(fields),
+			"theme_modes":  []string{"daiji-dark", "daiji-light", "system"},
+			"i18n_locales": []string{"id", "en"},
+		})
+	}
+	fmt.Fprintf(stdout, "DAIWEB CHECK PASS: raw=%dB gzip=%dB ui_fields=%d\n", rawB, gzB, len(fields))
+	return 0
 }

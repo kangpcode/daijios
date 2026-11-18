@@ -247,14 +247,18 @@ func BuildTopologyGraph(eng *configengine.Engine, multiWAN *ispengine.MultiWANMo
 	}
 
 	if ac != nil {
-		for _, ap := range ac.ListAPs() {
-			nid := "ap:" + ap.Name
+		for _, ap := range ac.Inventory() {
+			lbl := ap.Name
+			if lbl == "" {
+				lbl = ap.MAC
+			}
+			nid := "ap:" + lbl
 			nodes = append(nodes, TopologyNode{
 				ID:      nid,
-				Label:   ap.Name,
+				Label:   lbl,
 				Kind:    "ap",
 				Up:      ap.Online,
-				Details: map[string]any{"mac": ap.MAC, "model": ap.Model, "ch2g": ap.Ch2G, "ch5g": ap.Ch5G, "clients": ap.Clients},
+				Details: map[string]any{"mac": ap.MAC, "model": ap.Model, "ch2g": ap.Channel2G, "ch5g": ap.Channel5G, "clients": ap.ClientCount},
 			})
 			edges = append(edges, TopologyEdge{From: "core", To: nid, Kind: "capwap"})
 		}

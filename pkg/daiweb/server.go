@@ -19,7 +19,6 @@ import (
 	"net/url"
 	"path"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/kangpcode/daijios/pkg/configengine"
