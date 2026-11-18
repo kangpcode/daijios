@@ -6,6 +6,7 @@ package daiweb
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/sha256"
 	"crypto/subtle"
 	"embed"
@@ -383,16 +384,14 @@ func (s *Server) handleWSTelemetry(w http.ResponseWriter, r *http.Request, _ *se
 		return
 	}
 	defer ws.Close()
+	wsCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// Send initial snapshot immediately before entering periodic tick loop.
 	_ = ws.WriteJSON(CollectTelemetrySnapshot(s.deps.Config, s.deps.Sessions, s.deps.MultiWAN, s.deps.Torch, s.deps.BootTime, s.deps.Now()))
 
-	done := make(chan struct{})
-	var closeOnce sync.Once
-	stop := func() { closeOnce.Do(func() { close(done) }) }
-
 	go func() {
-		defer stop()
+		defer cancel()
 		for {
 			if _, err := ws.ReadText(); err != nil {
 				return
@@ -404,9 +403,7 @@ func (s *Server) handleWSTelemetry(w http.ResponseWriter, r *http.Request, _ *se
 	defer tk.Stop()
 	for {
 		select {
-		case <-done:
-			return
-		case <-r.Context().Done():
+		case <-wsCtx.Done():
 			return
 		case <-tk.C:
 			snap := CollectTelemetrySnapshot(s.deps.Config, s.deps.Sessions, s.deps.MultiWAN, s.deps.Torch, s.deps.BootTime, s.deps.Now())
@@ -441,6 +438,8 @@ func (s *Server) handleWSCLI(w http.ResponseWriter, r *http.Request, claims *sec
 		return
 	}
 	defer ws.Close()
+	wsCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	_ = ws.WriteJSON(map[string]any{
 		"prompt": sess.Prompt(),
@@ -474,7 +473,7 @@ func (s *Server) handleWSCLI(w http.ResponseWriter, r *http.Request, claims *sec
 			})
 			continue
 		}
-		res, execErr := sess.Execute(r.Context(), req.Cmd)
+		res, execErr := sess.Execute(wsCtx, req.Cmd)
 		if execErr != nil {
 			_ = ws.WriteJSON(map[string]any{"prompt": sess.Prompt(), "error": execErr.Error()})
 			continue

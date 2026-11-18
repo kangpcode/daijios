@@ -138,6 +138,7 @@ func stageLANWizard(eng *configengine.Engine, actor string, v map[string]any) er
 		"name":           br,
 		"vlan_filtering": false,
 		"stp_mode":       "rstp",
+		"ports":          []any{},
 		"addresses":      []any{cidr},
 		"enabled":        true,
 	})
@@ -145,8 +146,9 @@ func stageLANWizard(eng *configengine.Engine, actor string, v map[string]any) er
 
 func stagePPPoEWizard(eng *configengine.Engine, actor string, v map[string]any) error {
 	srv := strVal(v["server_name"], "daiji-fiber")
-	iface := strVal(v["interface"], "eth2")
+	iface := strVal(v["interface"], "eth0")
 	poolCIDR := strVal(v["pool_cidr"], "100.64.0.0/20")
+	localIP := strVal(v["local_ip"], "100.64.0.1")
 	mtu := numVal(v["mtu"], 1492)
 	poolName := "pool-" + srv
 
@@ -161,6 +163,7 @@ func stagePPPoEWizard(eng *configengine.Engine, actor string, v map[string]any) 
 		"service_name": srv,
 		"ac_name":      "DaijiOS-BNG",
 		"interface":    iface,
+		"local_ip":     localIP,
 		"ip_pool":      poolName,
 		"mtu":          float64(mtu),
 		"mru":          float64(mtu),
