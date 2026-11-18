@@ -67,6 +67,42 @@ func TestReleaseManifestAndSHA256Verification(t *testing.T) {
 	}
 }
 
+func TestPersistentKeyPEMSignAndPinnedVerify(t *testing.T) {
+	dir := t.TempDir()
+	privPath := filepath.Join(dir, "rel.key.pem")
+	pubPath := filepath.Join(dir, "rel.pub.pem")
+	genPub, genPriv, err := GenerateSigningKeypairPEM(privPath, pubPath)
+	if err != nil {
+		t.Fatalf("GenerateSigningKeypairPEM: %v", err)
+	}
+	loadedPriv, err := LoadPrivateKeyPEM(privPath)
+	if err != nil || !loadedPriv.Equal(genPriv) {
+		t.Fatalf("LoadPrivateKeyPEM mismatch: %v", err)
+	}
+	loadedPub, err := LoadPublicKeyPEM(pubPath)
+	if err != nil || !loadedPub.Equal(genPub) {
+		t.Fatalf("LoadPublicKeyPEM mismatch: %v", err)
+	}
+
+	artDir := filepath.Join(dir, "dist")
+	_ = os.MkdirAll(artDir, 0o755)
+	_ = os.WriteFile(filepath.Join(artDir, "daiji-ctl-linux-amd64"), []byte("payload"), 0o755)
+	m, err := BuildManifest(artDir, "1.2.0-lts", "go1.27.0", time.Unix(1795043731, 0))
+	if err != nil {
+		t.Fatalf("BuildManifest: %v", err)
+	}
+	if err := SignManifest(loadedPriv, m); err != nil {
+		t.Fatalf("SignManifest: %v", err)
+	}
+	if err := VerifyManifest(loadedPub, *m); err != nil {
+		t.Fatalf("VerifyManifest pinned pub: %v", err)
+	}
+	otherPub, _, _ := ed25519.GenerateKey(rand.Reader)
+	if err := VerifyManifest(otherPub, *m); err == nil {
+		t.Fatalf("expected VerifyManifest failure against wrong pinned public key")
+	}
+}
+
 func TestSoak72HourStability(t *testing.T) {
 	rep, err := RunSoakSimulation(SoakConfig{
 		SimulatedHours: 72,

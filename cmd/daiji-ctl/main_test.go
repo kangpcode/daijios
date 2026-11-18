@@ -3,6 +3,7 @@ package main
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -164,5 +165,26 @@ func TestCLIEndToEndPhase0(t *testing.T) {
 	soakOut := runCmd(0, "release", "soak", "--hours", "72", "--json")
 	if !strings.Contains(soakOut, `"simulated_hours": 72`) || !strings.Contains(soakOut, `"failed_ops": 0`) {
 		t.Fatalf("release soak unexpected output:\n%s", soakOut)
+	}
+
+	// Persistent Ed25519 keygen -> signed release manifest -> pinned pub verification.
+	relTmp := t.TempDir()
+	artDir := filepath.Join(relTmp, "dist")
+	outRelDir := filepath.Join(relTmp, "out")
+	_ = os.MkdirAll(artDir, 0o755)
+	_ = os.WriteFile(filepath.Join(artDir, "daiji-ctl-linux-amd64"), []byte("test-bin"), 0o755)
+	privPEM := filepath.Join(relTmp, "rel.key.pem")
+	pubPEM := filepath.Join(relTmp, "rel.pub.pem")
+	keygenOut := runCmd(0, "release", "keygen", "--out", privPEM, "--pub-out", pubPEM, "--json")
+	if !strings.Contains(keygenOut, `"ed25519_pub_hex"`) {
+		t.Fatalf("release keygen unexpected output:\n%s", keygenOut)
+	}
+	manOut := runCmd(0, "release", "manifest", "--dir", artDir, "--out", outRelDir, "--key-file", privPEM, "--version", "1.2.0-lts", "--json")
+	if !strings.Contains(manOut, `"persistent_key": true`) {
+		t.Fatalf("release manifest unexpected output:\n%s", manOut)
+	}
+	verOut := runCmd(0, "release", "verify", "--dir", artDir, "--manifest", filepath.Join(outRelDir, "manifest.json"), "--sums", filepath.Join(outRelDir, "SHA256SUMS"), "--pub-file", pubPEM)
+	if !strings.Contains(verOut, `pinned_pub=true`) {
+		t.Fatalf("release verify unexpected output:\n%s", verOut)
 	}
 }
