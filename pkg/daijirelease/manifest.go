@@ -8,9 +8,12 @@ package daijirelease
 
 import (
 	"crypto/ed25519"
+	"crypto/rand"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -216,4 +219,87 @@ func manifestDigest(m ReleaseManifest) []byte {
 		fmt.Fprintf(h, "%s:%d:%s;", a.Name, a.Size, a.SHA256)
 	}
 	return h.Sum(nil)
+}
+
+// GenerateSigningKeypairPEM creates a persistent Ed25519 release signing keypair on disk
+// using PKCS#8 PEM (`0600`) for private key and PKIX SPKI PEM (`0644`) for public key.
+func GenerateSigningKeypairPEM(privPath, pubPath string) (ed25519.PublicKey, ed25519.PrivateKey, error) {
+	pub, priv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, nil, err
+	}
+	pkcs8, err := x509.MarshalPKCS8PrivateKey(priv)
+	if err != nil {
+		return nil, nil, err
+	}
+	privPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: pkcs8})
+	if err := os.WriteFile(privPath, privPEM, 0o600); err != nil {
+		return nil, nil, err
+	}
+	if pubPath != "" {
+		spki, err := x509.MarshalPKIXPublicKey(pub)
+		if err != nil {
+			return nil, nil, err
+		}
+		pubPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: spki})
+		if err := os.WriteFile(pubPath, pubPEM, 0o644); err != nil {
+			return nil, nil, err
+		}
+	}
+	return pub, priv, nil
+}
+
+// LoadPrivateKeyPEM reads an Ed25519 private key from PKCS#8 PEM or hex-encoded seed/key file.
+func LoadPrivateKeyPEM(path string) (ed25519.PrivateKey, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	if blk, _ := pem.Decode(raw); blk != nil {
+		k, err := x509.ParsePKCS8PrivateKey(blk.Bytes)
+		if err != nil {
+			return nil, fmt.Errorf("parse pkcs8 key %s: %w", path, err)
+		}
+		priv, ok := k.(ed25519.PrivateKey)
+		if !ok {
+			return nil, fmt.Errorf("key %s is not Ed25519", path)
+		}
+		return priv, nil
+	}
+	hexBytes, err := hex.DecodeString(strings.TrimSpace(string(raw)))
+	if err != nil {
+		return nil, fmt.Errorf("invalid private key format in %s", path)
+	}
+	switch len(hexBytes) {
+	case ed25519.SeedSize:
+		return ed25519.NewKeyFromSeed(hexBytes), nil
+	case ed25519.PrivateKeySize:
+		return ed25519.PrivateKey(hexBytes), nil
+	default:
+		return nil, fmt.Errorf("unexpected Ed25519 key size %d in %s", len(hexBytes), path)
+	}
+}
+
+// LoadPublicKeyPEM reads a pinned Ed25519 public key from PKIX PEM or hex-encoded file.
+func LoadPublicKeyPEM(path string) (ed25519.PublicKey, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	if blk, _ := pem.Decode(raw); blk != nil {
+		k, err := x509.ParsePKIXPublicKey(blk.Bytes)
+		if err != nil {
+			return nil, fmt.Errorf("parse pkix public key %s: %w", path, err)
+		}
+		pub, ok := k.(ed25519.PublicKey)
+		if !ok {
+			return nil, fmt.Errorf("public key %s is not Ed25519", path)
+		}
+		return pub, nil
+	}
+	hexBytes, err := hex.DecodeString(strings.TrimSpace(string(raw)))
+	if err != nil || len(hexBytes) != ed25519.PublicKeySize {
+		return nil, fmt.Errorf("invalid Ed25519 public key in %s", path)
+	}
+	return ed25519.PublicKey(hexBytes), nil
 }

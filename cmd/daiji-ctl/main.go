@@ -117,7 +117,7 @@ func printUsage(w io.Writer) {
 		"  daiji-ctl billing simulate-cycle [--json]\n"+
 		"  daiji-ctl cloud dr-check [--json]\n"+
 		"  daiji-ctl portal license-demo [--json]\n"+
-		"  daiji-ctl release <manifest|verify|soak> [flags]\n"+
+		"  daiji-ctl release <keygen|manifest|verify|soak> [flags]\n"+
 		"  daiji-ctl ab status --state-dir <dir>\n",
 		sysinfo.BrandBanner,
 	)
