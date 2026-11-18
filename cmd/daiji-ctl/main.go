@@ -6,6 +6,9 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -24,6 +27,7 @@ import (
 	"github.com/kangpcode/daijios/pkg/daijicli"
 	"github.com/kangpcode/daijios/pkg/daijicloud"
 	"github.com/kangpcode/daijios/pkg/daijiportal"
+	"github.com/kangpcode/daijios/pkg/daijirelease"
 	"github.com/kangpcode/daijios/pkg/daijiscript"
 	"github.com/kangpcode/daijios/pkg/daimo"
 	"github.com/kangpcode/daijios/pkg/daiweb"
@@ -82,6 +86,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return cmdCloud(args[1:], stdout, stderr)
 	case "portal":
 		return cmdPortal(args[1:], stdout, stderr)
+	case "release":
+		return cmdRelease(args[1:], stdout, stderr)
 	case "ab":
 		return cmdAB(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
@@ -111,6 +117,7 @@ func printUsage(w io.Writer) {
 		"  daiji-ctl billing simulate-cycle [--json]\n"+
 		"  daiji-ctl cloud dr-check [--json]\n"+
 		"  daiji-ctl portal license-demo [--json]\n"+
+		"  daiji-ctl release <manifest|verify|soak> [flags]\n"+
 		"  daiji-ctl ab status --state-dir <dir>\n",
 		sysinfo.BrandBanner,
 	)
@@ -1029,4 +1036,124 @@ func cmdPortal(args []string, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintf(stdout, "DAIJIPORTAL ED25519 VERIFIED: license=%s tier=%s devices=%d\n", verified.LicenseID, verified.Tier, verified.MaxDevices)
 	return 0
+}
+
+func cmdRelease(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 {
+		fmt.Fprintln(stderr, "release subcommand required: manifest | verify | soak")
+		return 2
+	}
+	sub := args[0]
+	switch sub {
+	case "soak":
+		fs := flag.NewFlagSet("release soak", flag.ContinueOnError)
+		fs.SetOutput(stderr)
+		jsonOut := fs.Bool("json", false, "output JSON")
+		hours := fs.Int("hours", 72, "simulated soak duration in hours")
+		if err := fs.Parse(args[1:]); err != nil {
+			return 2
+		}
+		rep, err := daijirelease.RunSoakSimulation(daijirelease.SoakConfig{SimulatedHours: *hours, OpsPerHour: 10})
+		if err != nil {
+			fmt.Fprintf(stderr, "soak error: %v\n", err)
+			return 1
+		}
+		if *jsonOut {
+			return writeJSONOut(stdout, rep)
+		}
+		fmt.Fprintf(stdout, "SOAK %dH PASS: tx=%d failed=%d p99=%.1fus heap=%dKB->%dKB goroutine_delta=%d\n",
+			rep.SimulatedHours, rep.TotalTransactions, rep.FailedOps, rep.P99LatencyUs, rep.StartHeapKB, rep.EndHeapKB, rep.GoroutineDelta)
+		return 0
+
+	case "manifest":
+		fs := flag.NewFlagSet("release manifest", flag.ContinueOnError)
+		fs.SetOutput(stderr)
+		dir := fs.String("dir", "bin/dist", "artifact directory")
+		outDir := fs.String("out", "bin/release", "output directory for manifest.json & SHA256SUMS")
+		ver := fs.String("version", sysinfo.Version, "release version")
+		jsonOut := fs.Bool("json", false, "output JSON")
+		if err := fs.Parse(args[1:]); err != nil {
+			return 2
+		}
+		m, err := daijirelease.BuildManifest(*dir, *ver, runtime.Version(), time.Now().UTC())
+		if err != nil {
+			fmt.Fprintf(stderr, "build manifest error: %v\n", err)
+			return 1
+		}
+		_, priv, err := ed25519.GenerateKey(rand.Reader)
+		if err != nil {
+			fmt.Fprintf(stderr, "keygen error: %v\n", err)
+			return 1
+		}
+		if err := daijirelease.SignManifest(priv, m); err != nil {
+			fmt.Fprintf(stderr, "sign manifest error: %v\n", err)
+			return 1
+		}
+		if err := os.MkdirAll(*outDir, 0o755); err != nil {
+			fmt.Fprintf(stderr, "mkdir out error: %v\n", err)
+			return 1
+		}
+		sumsPath := filepath.Join(*outDir, "SHA256SUMS")
+		manifestPath := filepath.Join(*outDir, "manifest.json")
+		if err := daijirelease.WriteSHA256SUMS(sumsPath, m.Artifacts); err != nil {
+			fmt.Fprintf(stderr, "write SHA256SUMS error: %v\n", err)
+			return 1
+		}
+		if err := daijirelease.SaveManifestJSON(manifestPath, m); err != nil {
+			fmt.Fprintf(stderr, "save manifest error: %v\n", err)
+			return 1
+		}
+		if *jsonOut {
+			return writeJSONOut(stdout, map[string]any{
+				"brand":     m.Brand,
+				"version":   m.Version,
+				"artifacts": len(m.Artifacts),
+				"manifest":  manifestPath,
+				"sums":      sumsPath,
+				"lts_until": m.LTS.ActiveUntil,
+			})
+		}
+		fmt.Fprintf(stdout, "RELEASE MANIFEST SIGNED: version=%s artifacts=%d out=%s\n", m.Version, len(m.Artifacts), *outDir)
+		return 0
+
+	case "verify":
+		fs := flag.NewFlagSet("release verify", flag.ContinueOnError)
+		fs.SetOutput(stderr)
+		dir := fs.String("dir", "bin/dist", "artifact directory")
+		manifestPath := fs.String("manifest", "bin/release/manifest.json", "manifest.json path")
+		sumsPath := fs.String("sums", "bin/release/SHA256SUMS", "SHA256SUMS path")
+		if err := fs.Parse(args[1:]); err != nil {
+			return 2
+		}
+		raw, err := os.ReadFile(*manifestPath)
+		if err != nil {
+			fmt.Fprintf(stderr, "read manifest error: %v\n", err)
+			return 1
+		}
+		var m daijirelease.ReleaseManifest
+		if err := json.Unmarshal(raw, &m); err != nil {
+			fmt.Fprintf(stderr, "parse manifest error: %v\n", err)
+			return 1
+		}
+		pubBytes, err := hex.DecodeString(m.PublicKey)
+		if err != nil {
+			fmt.Fprintf(stderr, "decode public key error: %v\n", err)
+			return 1
+		}
+		if err := daijirelease.VerifyManifest(ed25519.PublicKey(pubBytes), m); err != nil {
+			fmt.Fprintf(stderr, "manifest verify failed: %v\n", err)
+			return 1
+		}
+		cnt, err := daijirelease.VerifySHA256SUMS(*dir, *sumsPath)
+		if err != nil {
+			fmt.Fprintf(stderr, "checksum verify failed: %v\n", err)
+			return 1
+		}
+		fmt.Fprintf(stdout, "RELEASE VERIFIED: version=%s ed25519=OK checksums=%d\n", m.Version, cnt)
+		return 0
+
+	default:
+		fmt.Fprintf(stderr, "unknown release subcommand %q\n", sub)
+		return 2
+	}
 }

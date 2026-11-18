@@ -1,0 +1,81 @@
+# DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)
+# Phase 12 CI/CD, Fuzzing, HIL Emulator Smoke, and LTS Release Pipeline
+
+name: DaijiOS CI & LTS Release
+
+on:
+  push:
+    branches: [ main, "release/v1.2*" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  vet-and-test:
+    name: Static Analysis, Race Tests & 72h Soak
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.x"
+      - name: Go Vet
+        run: go vet ./...
+      - name: Unit, Integration & 72h Soak Tests (-race)
+        run: go test -v -race -count=1 -coverprofile=coverage.out ./...
+      - name: Coverage Summary
+        run: go tool cover -func=coverage.out | tail -n 10
+
+  fuzz-smoke:
+    name: Parser Fuzzing (CLI, API, Schema, CWMP)
+    runs-on: ubuntu-latest
+    needs: vet-and-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.x"
+      - name: Run Go Fuzz Targets (10s each)
+        run: |
+          go test -fuzz=FuzzCLIParserAndPipe -fuzztime=10s ./pkg/daijicli
+          go test -fuzz=FuzzOfflineLicenseAndAPI -fuzztime=10s ./pkg/daijiportal
+          go test -fuzz=FuzzCWMPEnvelopeParser -fuzztime=10s ./pkg/daijiacs
+          go test -fuzz=FuzzConfigJSONValidate -fuzztime=10s ./pkg/schema
+
+  bench-and-pps:
+    name: Throughput / PPS / Latency Benchmarks
+    runs-on: ubuntu-latest
+    needs: vet-and-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.x"
+      - name: Run Core Benchmarks
+        run: make bench
+
+  cross-build-hil-release:
+    name: Cross-Build (60 Binaries), HIL/QEMU Smoke & Signed LTS Bundle
+    runs-on: ubuntu-latest
+    needs: [vet-and-test, fuzz-smoke]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.x"
+      - name: Build Host & Multi-Arch Binaries
+        run: |
+          make build VERSION=1.2.0-lts
+          make cross-build VERSION=1.2.0-lts
+      - name: Run HIL / Emulator Smoke Verification
+        run: bash ./scripts/hil-smoke.sh
+      - name: Generate Signed Release Bundle & SHA256SUMS
+        run: bash ./scripts/release.sh
+      - name: Upload Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: daijios-v1.2.0-lts-artifacts
+          path: bin/release/

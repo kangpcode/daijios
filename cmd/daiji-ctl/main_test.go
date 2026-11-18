@@ -161,4 +161,8 @@ func TestCLIEndToEndPhase0(t *testing.T) {
 	if !strings.Contains(portalOut, `"DJLIC1.`) || !strings.Contains(portalOut, `"enterprise"`) {
 		t.Fatalf("portal license-demo unexpected output:\n%s", portalOut)
 	}
+	soakOut := runCmd(0, "release", "soak", "--hours", "72", "--json")
+	if !strings.Contains(soakOut, `"simulated_hours": 72`) || !strings.Contains(soakOut, `"failed_ops": 0`) {
+		t.Fatalf("release soak unexpected output:\n%s", soakOut)
+	}
 }

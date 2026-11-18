@@ -565,6 +565,9 @@ func (s *Session) cmdShow(args []string) (*CommandResult, error) {
 		}
 		return &CommandResult{Output: strings.TrimRight(b.String(), "\n"), Structured: snap}, nil
 	default:
+		if s.Engine == nil {
+			return nil, errors.New("config engine not attached")
+		}
 		// Support `show <dot.path>` (and relative sub-config path) directly from running config.
 		run := s.Engine.GetRunning(true)
 		rawPath := strings.Join(args, ".")
@@ -831,6 +834,9 @@ func (s *Session) ContextualHelp(prefix string) []HelpHint {
 	}
 	hasTrailingSpace := strings.HasSuffix(prefix, " ") || strings.HasSuffix(prefix, "\t")
 	toks := splitShellTokens(trimmed)
+	if len(toks) == 0 {
+		return s.verbsForCurrentMode()
+	}
 	verb := strings.ToLower(toks[0])
 	if (verb == "set" || verb == "unset" || verb == "add" || verb == "remove" || verb == "enter") && len(toks) >= 2 {
 		fullPath := s.resolvePath(toks[1])

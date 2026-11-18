@@ -25,10 +25,10 @@ ACSD_PKG := ./services/daiji-acsd
 BILLINGD_PKG := ./services/daiji-billingd
 CLOUDD_PKG := ./services/daiji-cloudd
 PORTALD_PKG := ./services/daiji-portald
-VERSION ?= 1.2.0-phase11
+VERSION ?= 1.2.0-lts
 LDFLAGS := -s -w -X github.com/kangpcode/daijios/pkg/sysinfo.Version=$(VERSION)
 
-.PHONY: all build test test-race bench vet check cross-build clean
+.PHONY: all build test test-race bench vet fuzz hil-smoke release check cross-build clean
 
 all: vet test-race build
 
@@ -59,7 +59,19 @@ bench:
 vet:
 	go vet ./...
 
-check: vet test-race bench
+check: vet test-race bench fuzz
+
+fuzz:
+	go test -fuzz=FuzzCLIParserAndPipe -fuzztime=3s ./pkg/daijicli
+	go test -fuzz=FuzzOfflineLicenseAndAPI -fuzztime=3s ./pkg/daijiportal
+	go test -fuzz=FuzzCWMPEnvelopeParser -fuzztime=3s ./pkg/daijiacs
+	go test -fuzz=FuzzConfigJSONValidate -fuzztime=3s ./pkg/schema
+
+hil-smoke: build cross-build
+	bash ./scripts/hil-smoke.sh
+
+release: build cross-build hil-smoke
+	bash ./scripts/release.sh
 
 # Cross-compile static binaries for all supported hardware targets
 cross-build:
