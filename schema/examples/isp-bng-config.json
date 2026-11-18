@@ -1,0 +1,241 @@
+{
+  "schema_version": "1.3.0",
+  "system": {
+    "hostname": "daiji-bras-jkt-01",
+    "domain_name": "isp.daiji.net.id",
+    "timezone": "Asia/Jakarta",
+    "ntp_servers": ["0.id.pool.ntp.org"],
+    "motd_banner": "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)",
+    "watchdog": { "enabled": true, "timeout_sec": 30, "max_failed_boots": 3 },
+    "users": [
+      {
+        "username": "ispadmin",
+        "role": "superadmin",
+        "password_hash": "$argon2id$v=19$m=65536,t=3,p=2$c2FsdHNhbHQ$9Z2V9Y2F0c2VjcmV0aGFzaA",
+        "mfa_required": true,
+        "enabled": true
+      }
+    ]
+  },
+  "management": {
+    "ssh": { "enabled": true, "port": 2222, "password_auth": false, "listen_addresses": ["10.255.0.1"] },
+    "api": { "enabled": true, "port": 8443, "tls_enabled": true, "signing_secret": "DaijiBNGAPISecret2026Key" },
+    "daiweb": { "enabled": true, "port": 443, "theme": "daiji-dark" }
+  },
+  "interfaces": {
+    "physical": [
+      { "name": "eth0", "description": "WAN Telkom/Upstream A", "role": "wan", "mtu": 1500, "addresses": ["203.0.113.2/30"], "enabled": true },
+      { "name": "eth1", "description": "WAN Upstream B", "role": "wan", "mtu": 1500, "addresses": ["198.51.100.2/30"], "enabled": true },
+      { "name": "eth2", "description": "FTTH OLT Subscriber Trunk", "role": "lan", "mtu": 1500, "addresses": ["10.10.0.1/24"], "enabled": true },
+      { "name": "eth3", "description": "Hotspot Campus Access", "role": "lan", "mtu": 1500, "addresses": ["172.20.0.1/22"], "enabled": true }
+    ]
+  },
+  "isp": {
+    "ip_pools": [
+      { "name": "pool-pppoe-res", "ranges": ["100.64.0.0/20"] },
+      { "name": "pool-isolir", "ranges": ["100.64.250.0/24"] },
+      { "name": "pool-hotspot", "ranges": ["172.20.1.0/24"] }
+    ],
+    "profiles": [
+      {
+        "name": "home-50m",
+        "download_kbps": 50000,
+        "upload_kbps": 25000,
+        "burst_download_kbps": 75000,
+        "burst_upload_kbps": 35000,
+        "burst_time_sec": 8,
+        "address_pool": "pool-pppoe-res",
+        "dns_servers": ["1.1.1.1", "8.8.8.8"],
+        "session_timeout_sec": 86400,
+        "idle_timeout_sec": 0,
+        "shared_users": 1,
+        "expired_pool": "pool-isolir",
+        "expired_redirect_url": "https://portal.daiji.net.id/isolir"
+      },
+      {
+        "name": "hotspot-voucher-10m",
+        "download_kbps": 10000,
+        "upload_kbps": 5000,
+        "address_pool": "pool-hotspot",
+        "session_timeout_sec": 3600,
+        "shared_users": 2
+      }
+    ],
+    "radius": {
+      "client": {
+        "enabled": true,
+        "nas_identifier": "daiji-bras-jkt-01",
+        "nas_ip": "10.255.0.1",
+        "coa_enabled": true,
+        "coa_port": 3799,
+        "coa_secret": "DaijiCoASecret2026!",
+        "servers": [
+          { "name": "rad-primary", "host": "10.255.0.10", "auth_port": 1812, "acct_port": 1813, "secret": "DaijiRadKey2026!", "priority": 1, "timeout_sec": 3 }
+        ]
+      },
+      "server": {
+        "enabled": true,
+        "auth_port": 1812,
+        "acct_port": 1813,
+        "clients": [
+          { "name": "bras-local", "cidr": "127.0.0.1/32", "secret": "DaijiRadKey2026!" },
+          { "name": "olt-nas", "cidr": "10.255.0.0/24", "secret": "DaijiNASClient2026!" }
+        ]
+      }
+    },
+    "pppoe": {
+      "servers": [
+        {
+          "name": "pppoe-ftth",
+          "service_name": "daiji-fiber",
+          "ac_name": "DaijiOS-BNG-JKT",
+          "interface": "eth2",
+          "local_ip": "100.64.0.1",
+          "ip_pool": "pool-pppoe-res",
+          "mtu": 1492,
+          "mru": 1492,
+          "auth_methods": ["chap", "mschapv2"],
+          "use_radius": true,
+          "default_profile": "home-50m",
+          "session_limit": 8000,
+          "one_session_per_mac": true,
+          "enabled": true
+        }
+      ],
+      "clients": [
+        { "name": "uplink-backup", "interface": "eth1", "username": "isp-uplink@daiji", "password": "UplinkSecret2026!", "mtu": 1492, "default_route": false, "distance": 20, "use_peer_dns": false, "enabled": false }
+      ],
+      "secrets": [
+        {
+          "username": "budi@fiber.daiji",
+          "password": "BudiPass2026!",
+          "service": "pppoe",
+          "profile": "home-50m",
+          "static_ip": "100.64.1.10",
+          "caller_mac": "aa:bb:cc:11:22:33",
+          "expires_at": "2027-12-31T23:59:59Z",
+          "disabled": false
+        }
+      ]
+    },
+    "ipoe": {
+      "servers": [
+        { "name": "ipoe-corp", "interface": "eth2", "auth_mode": "mac", "ip_pool": "pool-pppoe-res", "default_profile": "home-50m", "use_radius": true, "enabled": true }
+      ]
+    },
+    "hotspot": {
+      "servers": [
+        {
+          "name": "hotspot-campus",
+          "interface": "eth3",
+          "address_pool": "pool-hotspot",
+          "dns_name": "login.daiji.local",
+          "login_page_url": "https://login.daiji.local/portal",
+          "trial_enabled": true,
+          "trial_uptime_sec": 600,
+          "walled_garden_hosts": ["portal.daiji.net.id", "qris.midtrans.com"],
+          "walled_garden_cidrs": ["10.255.0.0/24"],
+          "use_radius": false,
+          "mac_cookie": true,
+          "default_profile": "hotspot-voucher-10m",
+          "enabled": true
+        }
+      ],
+      "vouchers": [
+        { "code": "DAIJI-VIP-2026", "profile": "hotspot-voucher-10m", "validity_sec": 3600, "data_limit_mb": 2048, "max_devices": 2, "expires_at": "2027-12-31T23:59:59Z", "disabled": false }
+      ]
+    },
+    "multi_wan": {
+      "enabled": true,
+      "mode": "load-balance-pcc",
+      "sticky_sessions": true,
+      "wans": [
+        {
+          "name": "wan-a",
+          "interface": "eth0",
+          "gateway": "203.0.113.1",
+          "weight": 2,
+          "distance": 1,
+          "check_method": "recursive",
+          "check_targets": ["1.1.1.1", "8.8.8.8"],
+          "check_interval_sec": 5,
+          "check_timeout_ms": 1000,
+          "fail_threshold": 3,
+          "recover_threshold": 2,
+          "routing_table": 101,
+          "enabled": true
+        },
+        {
+          "name": "wan-b",
+          "interface": "eth1",
+          "gateway": "198.51.100.1",
+          "weight": 1,
+          "distance": 2,
+          "check_method": "netwatch-icmp",
+          "check_targets": ["9.9.9.9"],
+          "check_interval_sec": 5,
+          "check_timeout_ms": 1000,
+          "fail_threshold": 3,
+          "recover_threshold": 2,
+          "routing_table": 102,
+          "enabled": true
+        }
+      ]
+    }
+  },
+  "telemetry": {
+    "netflow": {
+      "enabled": true,
+      "version": "ipfix",
+      "active_timeout_sec": 60,
+      "sampling_rate": 1,
+      "collectors": [{ "host": "10.255.0.20", "port": 2055 }]
+    },
+    "snmp": {
+      "enabled": true,
+      "version": "v3",
+      "listen_address": "10.255.0.1",
+      "port": 161,
+      "sys_location": "IDC-Jakarta-Rack04",
+      "sys_contact": "noc@daiji.net.id",
+      "v3_users": [
+        { "username": "nocmon", "auth_proto": "sha256", "auth_pass": "DaijiSNMPAuth2026!", "priv_proto": "aes128", "priv_pass": "DaijiSNMPPriv2026!" }
+      ]
+    },
+    "syslog": {
+      "enabled": true,
+      "local_buffer_lines": 10000,
+      "remote_targets": [{ "host": "10.255.0.21", "port": 6514, "proto": "tls", "min_severity": "info" }]
+    },
+    "bandwidth_test": { "server_enabled": true, "port": 2000, "max_concurrent": 4, "require_auth": true }
+  },
+  "automation": {
+    "scripts": [
+      {
+        "name": "on-wan-failover",
+        "source": "let status = \"WAN_DOWN\"\nlog \"Multi-WAN failover event detected\"\nemit_webhook \"noc-hook\" \"wan-down\"",
+        "permissions": ["read", "net"],
+        "timeout_ms": 1500,
+        "enabled": true
+      }
+    ],
+    "schedules": [
+      { "name": "periodic-check", "script_name": "on-wan-failover", "interval_sec": 60, "start_on_boot": false, "enabled": true }
+    ],
+    "event_hooks": [
+      { "name": "hook-wan-down", "event": "wan-down", "script_name": "on-wan-failover", "webhook_name": "noc-hook", "enabled": true }
+    ],
+    "webhooks": [
+      {
+        "name": "noc-hook",
+        "url": "https://noc.daiji.net.id/hooks/daijios",
+        "secret": "DaijiWebhookHMAC2026!",
+        "events": ["wan-down", "wan-up", "user-expired"],
+        "timeout_ms": 3000,
+        "retry_count": 2,
+        "enabled": true
+      }
+    ]
+  },
+  "updates": { "channel": "stable", "auto_check": true, "require_signature": true, "confirm_timeout_sec": 180 }
+}

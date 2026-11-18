@@ -23,8 +23,11 @@
 | **OpenVPN** | SSL/TLS tunnel VPN (TUN/TAP) | `GPL-2.0-only` | Fase 2 | Daemon terpisah dikontrol via `/etc/openvpn/*` (`0600`). |
 | **xl2tpd / sstpd** | L2TP/IPsec & SSTP VPN server | `GPL-2.0-only` | Fase 2 | Daemon terpisah dikontrol via file konfigurasi terisolasi. |
 | **Kea DHCP / dnsmasq** | DHCP server/relay, DNS forwarder/cache | `MPL-2.0` (Kea) / `GPL-2.0` or `GPL-3.0` (dnsmasq) | Fase 1 | Daemon terpisah dengan konfigurasi JSON/conf yang dihasilkan oleh `daiji-reconcilerd`. |
-| **accel-ppp / pppd** | PPPoE/IPoE/L2TP access concentrator ISP | `GPL-2.0-or-later` | Fase 3 | Daemon terpisah; kontrol sesi via CLI/CoA/RADIUS. |
+| **accel-ppp / pppd** | PPPoE/IPoE/L2TP access concentrator ISP | `GPL-2.0-or-later` | Fase 3 | Daemon terpisah; dikontrol via `/etc/accel-ppp.conf` (`0600`) & CoA/RADIUS. |
 | **FreeRADIUS** | AAA & CoA server/proxy | `GPL-2.0-only` | Fase 3 | Daemon terpisah; komunikasi melalui protokol standar RADIUS RFC 2865/2866/5176. |
+| **Net-SNMP (`snmpd`)** | Agen monitoring SNMP v1/v2c/v3 (SHA256/AES128) | `BSD-like` | Fase 3 | Daemon terpisah dikontrol via `/etc/snmp/snmpd.conf` (`0600`). |
+| **rsyslog** | Pengumpul log sistem & forwarding TCP/TLS | `GPL-3.0-or-later` | Fase 3 | Daemon terpisah dikontrol via `/etc/rsyslog.d/99-daiji.conf`. |
+| **softflowd / IPFIX probe** | Ekspor flow NetFlow v5/v9/IPFIX | `BSD-2-Clause` | Fase 3 | Permissive; daemon terpisah dikontrol via `/etc/daiji/netflow.conf`. |
 | **hostapd / wpa_supplicant** | Wireless AP, WPA2/WPA3/Enterprise, Mesh, 802.11k/v/r | `BSD-3-Clause` | Fase 4 | Permissive; kontrol melalui `ctrl_iface` socket. |
 | **OpenSSH** | Akses manajemen SSH & SFTP terenkripsi | `BSD` / `OpenSSH` | Fase 0–2 | Daemon sistem terpisah. |
 

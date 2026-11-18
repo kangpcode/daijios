@@ -19,6 +19,10 @@ import (
 
 	"github.com/kangpcode/daijios/pkg/abupdate"
 	"github.com/kangpcode/daijios/pkg/configengine"
+	"github.com/kangpcode/daijios/pkg/daijiscript"
+	"github.com/kangpcode/daijios/pkg/ispplan"
+	"github.com/kangpcode/daijios/pkg/ispreconcile"
+	"github.com/kangpcode/daijios/pkg/isptools"
 	"github.com/kangpcode/daijios/pkg/netplan"
 	"github.com/kangpcode/daijios/pkg/netreconcile"
 	"github.com/kangpcode/daijios/pkg/schema"
@@ -50,6 +54,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return cmdNet(args[1:], stdout, stderr)
 	case "sec":
 		return cmdSec(args[1:], stdout, stderr)
+	case "isp":
+		return cmdISP(args[1:], stdout, stderr)
 	case "ab":
 		return cmdAB(args[1:], stdout, stderr)
 	case "help", "-h", "--help":
@@ -70,6 +76,7 @@ func printUsage(w io.Writer) {
 		"  daiji-ctl config <init|show|set|diff|commit|commit-confirm|confirm|rollback|save|revisions|verify-audit> [flags]\n"+
 		"  daiji-ctl net <plan|render-frr|render-kea|render-keepalived> --schema <path> --config <path>\n"+
 		"  daiji-ctl sec <render-nft|render-qos|render-vpn|audit-check> --schema <path> --config <path>\n"+
+		"  daiji-ctl isp <render-accel|render-mwan|render-snmp|run-script|bw-test> --schema <path> --config <path>\n"+
 		"  daiji-ctl ab status --state-dir <dir>\n",
 		sysinfo.BrandBanner,
 	)
@@ -196,7 +203,7 @@ func cmdConfig(args []string, stdout, stderr io.Writer) int {
 		BaseDir:           *storeDir,
 		Schema:            cs,
 		Migrator:          mig,
-		SemanticValidator: secplan.ValidateAllSemantic,
+		SemanticValidator: ispplan.ValidateAllSemantic,
 		BootstrapConfig:   boot,
 	})
 	if err != nil {
@@ -487,6 +494,90 @@ func cmdSec(args []string, stdout, stderr io.Writer) int {
 		return 1
 	default:
 		fmt.Fprintf(stderr, "unknown sec subcommand %q\n", sub)
+		return 2
+	}
+}
+
+func cmdISP(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 {
+		fmt.Fprintln(stderr, "isp subcommand required: render-accel | render-mwan | render-snmp | run-script | bw-test")
+		return 2
+	}
+	sub := args[0]
+	fs := flag.NewFlagSet("isp "+sub, flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	schemaPath := fs.String("schema", "schema/daijios.schema.json", "path to DaijiOS schema")
+	configPath := fs.String("config", "schema/examples/isp-bng-config.json", "path to config JSON")
+	scriptName := fs.String("script", "", "DaijiScript name for run-script")
+	if err := fs.Parse(args[1:]); err != nil {
+		return 2
+	}
+
+	if sub == "bw-test" {
+		res, err := isptools.RunLoopbackBandwidthTest(context.Background(), 1024*1024)
+		if err != nil {
+			fmt.Fprintf(stderr, "bw-test failed: %v\n", err)
+			return 1
+		}
+		return writeJSONOut(stdout, res)
+	}
+
+	cs, err := schema.LoadFile(*schemaPath)
+	if err != nil {
+		fmt.Fprintf(stderr, "error loading schema: %v\n", err)
+		return 1
+	}
+	raw, err := os.ReadFile(*configPath)
+	if err != nil {
+		fmt.Fprintf(stderr, "error reading config: %v\n", err)
+		return 1
+	}
+	if err := cs.ValidateJSON(raw); err != nil {
+		fmt.Fprintf(stderr, "schema error: %v\n", err)
+		return 1
+	}
+	var cfgMap map[string]any
+	if err := json.Unmarshal(raw, &cfgMap); err != nil {
+		fmt.Fprintf(stderr, "json error: %v\n", err)
+		return 1
+	}
+	if err := ispplan.ValidateAllSemantic(cfgMap); err != nil {
+		fmt.Fprintf(stderr, "semantic error: %v\n", err)
+		return 1
+	}
+	ispCfg, err := ispplan.ParseConfig(cfgMap)
+	if err != nil {
+		fmt.Fprintf(stderr, "parse error: %v\n", err)
+		return 1
+	}
+
+	switch sub {
+	case "render-accel":
+		fmt.Fprint(stdout, ispreconcile.RenderAccelPPP(ispCfg, true))
+		return 0
+	case "render-mwan":
+		fmt.Fprint(stdout, ispreconcile.RenderMultiWANNFT(ispCfg))
+		return 0
+	case "render-snmp":
+		fmt.Fprint(stdout, ispreconcile.RenderSNMPD(ispCfg, true))
+		return 0
+	case "run-script":
+		for _, sc := range ispCfg.Automation.Scripts {
+			if *scriptName == "" || sc.Name == *scriptName {
+				res, err := daijiscript.RunScript(context.Background(), sc, nil, daijiscript.ScriptHostCallbacks{
+					OnLog: func(msg string) { fmt.Fprintf(stdout, "[script:%s] %s\n", sc.Name, msg) },
+				})
+				if err != nil {
+					fmt.Fprintf(stderr, "script error: %v\n", err)
+					return 1
+				}
+				return writeJSONOut(stdout, res)
+			}
+		}
+		fmt.Fprintf(stderr, "script %q not found\n", *scriptName)
+		return 1
+	default:
+		fmt.Fprintf(stderr, "unknown isp subcommand %q\n", sub)
 		return 2
 	}
 }

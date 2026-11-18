@@ -92,4 +92,26 @@ func TestCLIEndToEndPhase0(t *testing.T) {
 	if !strings.Contains(auditSecOut, "AUDIT PASS") {
 		t.Fatalf("unexpected audit-check output: %s", auditSecOut)
 	}
+
+	bngCfg := filepath.Join("..", "..", "schema", "examples", "isp-bng-config.json")
+	accelOut := runCmd(0, "isp", "render-accel", "--schema", schemaPath, "--config", bngCfg)
+	if !strings.Contains(accelOut, "[pppoe]") || strings.Contains(accelOut, "DaijiCoASecret2026!") {
+		t.Fatalf("isp render-accel unexpected or leaked secret:\n%s", accelOut)
+	}
+	mwanOut := runCmd(0, "isp", "render-mwan", "--schema", schemaPath, "--config", bngCfg)
+	if !strings.Contains(mwanOut, "table inet daiji_isp") {
+		t.Fatalf("isp render-mwan missing table:\n%s", mwanOut)
+	}
+	snmpOut := runCmd(0, "isp", "render-snmp", "--schema", schemaPath, "--config", bngCfg)
+	if !strings.Contains(snmpOut, "SHA256") || strings.Contains(snmpOut, "DaijiSNMPAuth2026!") {
+		t.Fatalf("isp render-snmp unexpected or leaked secret:\n%s", snmpOut)
+	}
+	scriptOut := runCmd(0, "isp", "run-script", "--schema", schemaPath, "--config", bngCfg, "--script", "on-wan-failover")
+	if !strings.Contains(scriptOut, "Multi-WAN failover event detected") {
+		t.Fatalf("isp run-script unexpected output: %s", scriptOut)
+	}
+	bwOut := runCmd(0, "isp", "bw-test")
+	if !strings.Contains(bwOut, "throughput_mbps") {
+		t.Fatalf("isp bw-test unexpected output: %s", bwOut)
+	}
 }
