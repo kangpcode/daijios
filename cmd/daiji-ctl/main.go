@@ -678,6 +678,7 @@ func parseDynamicValue(raw string) any {
 
 func writeJSONOut(w io.Writer, v any) int {
 	enc := json.NewEncoder(w)
+	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(v); err != nil {
 		return 1

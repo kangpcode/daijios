@@ -1,0 +1,6918 @@
+{
+  "brand": "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)",
+  "schema_version": "1.4.0",
+  "modes": [
+    {
+      "name": "user",
+      "prompt_suffix": "\u003e ",
+      "min_role": "readonly",
+      "description": "Read-only operational inspection"
+    },
+    {
+      "name": "privileged",
+      "prompt_suffix": "# ",
+      "min_role": "operator",
+      "description": "Privileged diagnostics, save, and configuration entry"
+    },
+    {
+      "name": "config",
+      "prompt_suffix": "(cfg)# ",
+      "min_role": "netadmin",
+      "description": "Transactional candidate configuration staging \u0026 commit"
+    },
+    {
+      "name": "sub-config",
+      "prompt_suffix": "(cfg:\u003cctx\u003e)# ",
+      "min_role": "netadmin",
+      "description": "Scoped container sub-configuration mode"
+    }
+  ],
+  "verbs": [
+    {
+      "name": "show",
+      "modes": [
+        "user",
+        "privileged",
+        "config",
+        "sub-config"
+      ],
+      "syntax": "show \u003cversion|about|running|candidate|startup|interfaces|revisions|audit-verify|sessions|wans|dot.path\u003e",
+      "description": "Inspect operational state or configuration",
+      "pipes_supported": [
+        "include",
+        "exclude",
+        "count",
+        "json"
+      ]
+    },
+    {
+      "name": "set",
+      "modes": [
+        "config",
+        "sub-config"
+      ],
+      "syntax": "set \u003cpath\u003e \u003cvalue\u003e",
+      "description": "Set candidate configuration value"
+    },
+    {
+      "name": "unset",
+      "modes": [
+        "config",
+        "sub-config"
+      ],
+      "syntax": "unset \u003cpath\u003e",
+      "description": "Remove candidate configuration leaf or container"
+    },
+    {
+      "name": "add",
+      "modes": [
+        "config",
+        "sub-config"
+      ],
+      "syntax": "add \u003carray-path\u003e \u003celement\u003e",
+      "description": "Append element to list node"
+    },
+    {
+      "name": "remove",
+      "modes": [
+        "config",
+        "sub-config"
+      ],
+      "syntax": "remove \u003carray-path\u003e \u003ckey|index\u003e",
+      "description": "Remove element from list node"
+    },
+    {
+      "name": "diff",
+      "modes": [
+        "config",
+        "sub-config"
+      ],
+      "syntax": "diff",
+      "description": "Show candidate vs running diff with secret redaction",
+      "pipes_supported": [
+        "include",
+        "exclude",
+        "count",
+        "json"
+      ]
+    },
+    {
+      "name": "validate",
+      "modes": [
+        "config",
+        "sub-config"
+      ],
+      "syntax": "validate",
+      "description": "Validate candidate against SSoT JSON \u0026 semantic validators"
+    },
+    {
+      "name": "commit",
+      "modes": [
+        "config",
+        "sub-config"
+      ],
+      "syntax": "commit [message]",
+      "description": "Atomically apply candidate to running config",
+      "pipes_supported": [
+        "json"
+      ]
+    },
+    {
+      "name": "commit-confirm",
+      "modes": [
+        "config",
+        "sub-config"
+      ],
+      "syntax": "commit-confirm [seconds]",
+      "description": "Commit with deadman auto-rollback timer",
+      "pipes_supported": [
+        "json"
+      ]
+    },
+    {
+      "name": "confirm",
+      "modes": [
+        "config",
+        "sub-config"
+      ],
+      "syntax": "confirm",
+      "description": "Disarm active commit-confirm timer"
+    },
+    {
+      "name": "rollback",
+      "modes": [
+        "config",
+        "sub-config"
+      ],
+      "syntax": "rollback \u003crev-id|offset\u003e [--commit]",
+      "description": "Restore configuration revision",
+      "pipes_supported": [
+        "json"
+      ]
+    },
+    {
+      "name": "discard",
+      "modes": [
+        "config",
+        "sub-config"
+      ],
+      "syntax": "discard",
+      "description": "Discard staged candidate edits"
+    },
+    {
+      "name": "save",
+      "modes": [
+        "privileged",
+        "config",
+        "sub-config"
+      ],
+      "syntax": "save",
+      "description": "Persist running configuration to startup"
+    },
+    {
+      "name": "monitor",
+      "modes": [
+        "user",
+        "privileged",
+        "config",
+        "sub-config"
+      ],
+      "syntax": "monitor \u003ctraffic|torch|topic\u003e",
+      "description": "Stream real-time diagnostic snapshot",
+      "pipes_supported": [
+        "include",
+        "exclude",
+        "count",
+        "json"
+      ]
+    },
+    {
+      "name": "debug",
+      "modes": [
+        "privileged",
+        "config",
+        "sub-config"
+      ],
+      "syntax": "debug \u003cconfig-tree|topic\u003e",
+      "description": "Run internal subsystem diagnostic probes",
+      "pipes_supported": [
+        "include",
+        "exclude",
+        "count",
+        "json"
+      ]
+    },
+    {
+      "name": "search",
+      "modes": [
+        "user",
+        "privileged",
+        "config",
+        "sub-config"
+      ],
+      "syntax": "search \u003ckeyword\u003e",
+      "description": "Fuzzy search schema paths and descriptions",
+      "pipes_supported": [
+        "include",
+        "exclude",
+        "count",
+        "json"
+      ]
+    },
+    {
+      "name": "enter",
+      "modes": [
+        "config",
+        "sub-config"
+      ],
+      "syntax": "enter \u003ccontainer-path\u003e",
+      "description": "Descend into sub-config container"
+    },
+    {
+      "name": "up",
+      "modes": [
+        "sub-config"
+      ],
+      "syntax": "up",
+      "description": "Move up one sub-config hierarchy level"
+    },
+    {
+      "name": "top",
+      "modes": [
+        "sub-config"
+      ],
+      "syntax": "top",
+      "description": "Return directly to root config mode"
+    },
+    {
+      "name": "enable",
+      "modes": [
+        "user"
+      ],
+      "syntax": "enable",
+      "description": "Elevate from user mode to privileged mode"
+    },
+    {
+      "name": "disable",
+      "modes": [
+        "privileged"
+      ],
+      "syntax": "disable",
+      "description": "Drop from privileged mode to user mode"
+    },
+    {
+      "name": "config",
+      "modes": [
+        "privileged"
+      ],
+      "syntax": "config",
+      "description": "Enter transactional configuration mode"
+    },
+    {
+      "name": "alias",
+      "modes": [
+        "user",
+        "privileged",
+        "config",
+        "sub-config"
+      ],
+      "syntax": "alias [name command...]",
+      "description": "List or define operator command aliases",
+      "pipes_supported": [
+        "include",
+        "count",
+        "json"
+      ]
+    },
+    {
+      "name": "unalias",
+      "modes": [
+        "user",
+        "privileged",
+        "config",
+        "sub-config"
+      ],
+      "syntax": "unalias \u003cname\u003e",
+      "description": "Delete a user command alias"
+    },
+    {
+      "name": "history",
+      "modes": [
+        "user",
+        "privileged",
+        "config",
+        "sub-config"
+      ],
+      "syntax": "history",
+      "description": "Display session command history (secrets redacted)",
+      "pipes_supported": [
+        "include",
+        "exclude",
+        "count",
+        "json"
+      ]
+    },
+    {
+      "name": "help",
+      "modes": [
+        "user",
+        "privileged",
+        "config",
+        "sub-config"
+      ],
+      "syntax": "help",
+      "description": "Show available verbs for active mode",
+      "pipes_supported": [
+        "include",
+        "exclude",
+        "count",
+        "json"
+      ]
+    },
+    {
+      "name": "exit",
+      "modes": [
+        "user",
+        "privileged",
+        "config",
+        "sub-config"
+      ],
+      "syntax": "exit",
+      "description": "Step up mode hierarchy or exit session"
+    }
+  ],
+  "pipes": [
+    {
+      "op": "include",
+      "syntax": "| include \u003csubstring\u003e",
+      "description": "Retain lines matching case-insensitive substring"
+    },
+    {
+      "op": "exclude",
+      "syntax": "| exclude \u003csubstring\u003e",
+      "description": "Drop lines matching case-insensitive substring"
+    },
+    {
+      "op": "count",
+      "syntax": "| count",
+      "description": "Count non-empty output lines"
+    },
+    {
+      "op": "json",
+      "syntax": "| json",
+      "description": "Format command structured result as indented JSON"
+    }
+  ],
+  "cli_mappings": [
+    {
+      "cli_path": "firewall dpi enabled",
+      "config_path": "firewall.l7_dpi.enabled",
+      "type": "boolean",
+      "default": false,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "interfaces bonding \u003cname\u003e",
+      "config_path": "interfaces.bondings[*].name",
+      "type": "string",
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces bridge \u003cname\u003e",
+      "config_path": "interfaces.bridges[*].name",
+      "type": "string",
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces bridge \u003cname\u003e stp-mode",
+      "config_path": "interfaces.bridges[*].stp_mode",
+      "type": "string",
+      "enum": [
+        "none",
+        "stp",
+        "rstp",
+        "mstp"
+      ],
+      "default": "rstp",
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces physical \u003cname\u003e",
+      "config_path": "interfaces.physical[*].name",
+      "type": "string",
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces physical \u003cname\u003e address",
+      "config_path": "interfaces.physical[*].addresses",
+      "type": "array",
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces physical \u003cname\u003e description",
+      "config_path": "interfaces.physical[*].description",
+      "type": "string",
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces physical \u003cname\u003e duplex",
+      "config_path": "interfaces.physical[*].duplex",
+      "type": "string",
+      "enum": [
+        "auto",
+        "full",
+        "half"
+      ],
+      "default": "auto",
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces physical \u003cname\u003e enabled",
+      "config_path": "interfaces.physical[*].enabled",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces physical \u003cname\u003e mac",
+      "config_path": "interfaces.physical[*].mac_override",
+      "type": "string",
+      "format": "mac",
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces physical \u003cname\u003e mtu",
+      "config_path": "interfaces.physical[*].mtu",
+      "type": "integer",
+      "default": 1500,
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces physical \u003cname\u003e role",
+      "config_path": "interfaces.physical[*].role",
+      "type": "string",
+      "enum": [
+        "mgmt",
+        "wan",
+        "lan",
+        "trunk",
+        "unassigned"
+      ],
+      "default": "unassigned",
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces physical \u003cname\u003e speed",
+      "config_path": "interfaces.physical[*].speed_mbps",
+      "type": "integer",
+      "enum": [
+        "0",
+        "10",
+        "100",
+        "1000",
+        "2500",
+        "10000",
+        "25000",
+        "40000",
+        "100000"
+      ],
+      "default": 0,
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces physical \u003cname\u003e vrf",
+      "config_path": "interfaces.physical[*].vrf",
+      "type": "string",
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces vlan \u003cname\u003e",
+      "config_path": "interfaces.vlans[*].name",
+      "type": "string",
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces vlan \u003cname\u003e protocol",
+      "config_path": "interfaces.vlans[*].protocol",
+      "type": "string",
+      "enum": [
+        "802.1q",
+        "802.1ad"
+      ],
+      "default": "802.1q",
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces vlan \u003cname\u003e vid",
+      "config_path": "interfaces.vlans[*].vid",
+      "type": "integer",
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "interfaces vrrp \u003cname\u003e auth-secret",
+      "config_path": "interfaces.vrrp[*].auth_secret",
+      "type": "string",
+      "required": false,
+      "secret": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "ip dhcp server \u003cname\u003e",
+      "config_path": "ip.dhcp.servers[*].name",
+      "type": "string",
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "ip dns enabled",
+      "config_path": "ip.dns.enabled",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "ip ipv4 forward",
+      "config_path": "ip.ipv4_forward",
+      "type": "boolean",
+      "default": true,
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "ip ipv6 forward",
+      "config_path": "ip.ipv6_forward",
+      "type": "boolean",
+      "default": true,
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "ip ntp enabled",
+      "config_path": "ip.ntp.enabled",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "ip rp-filter",
+      "config_path": "ip.rp_filter",
+      "type": "integer",
+      "enum": [
+        "0",
+        "1",
+        "2"
+      ],
+      "default": 2,
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "isp multi-wan enabled",
+      "config_path": "isp.multi_wan.enabled",
+      "type": "boolean",
+      "default": false,
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "isp profile \u003cname\u003e",
+      "config_path": "isp.profiles[*].name",
+      "type": "string",
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "management api enabled",
+      "config_path": "management.api.enabled",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "management api port",
+      "config_path": "management.api.port",
+      "type": "integer",
+      "default": 8443,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "management api signing-secret",
+      "config_path": "management.api.signing_secret",
+      "type": "string",
+      "required": false,
+      "secret": true,
+      "rbac": "superadmin",
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "management api tls-enabled",
+      "config_path": "management.api.tls_enabled",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "management cloud controller-url",
+      "config_path": "management.cloud_link.controller_url",
+      "type": "string",
+      "format": "uri",
+      "required": false,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "management cloud enabled",
+      "config_path": "management.cloud_link.enabled",
+      "type": "boolean",
+      "default": false,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "management cloud enrollment-token",
+      "config_path": "management.cloud_link.enrollment_token",
+      "type": "string",
+      "required": false,
+      "secret": true,
+      "rbac": "superadmin",
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "management daiweb enabled",
+      "config_path": "management.daiweb.enabled",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "management daiweb port",
+      "config_path": "management.daiweb.port",
+      "type": "integer",
+      "default": 443,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "management daiweb theme",
+      "config_path": "management.daiweb.theme",
+      "type": "string",
+      "enum": [
+        "daiji-dark",
+        "daiji-light",
+        "system"
+      ],
+      "default": "daiji-dark",
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "management ssh enabled",
+      "config_path": "management.ssh.enabled",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "management ssh listen-address",
+      "config_path": "management.ssh.listen_addresses",
+      "type": "array",
+      "required": false,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "management ssh password-auth",
+      "config_path": "management.ssh.password_auth",
+      "type": "boolean",
+      "default": false,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "management ssh port",
+      "config_path": "management.ssh.port",
+      "type": "integer",
+      "default": 22,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "routing bgp enabled",
+      "config_path": "routing.bgp.enabled",
+      "type": "boolean",
+      "default": false,
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "routing bgp neighbor \u003cpeer\u003e password",
+      "config_path": "routing.bgp.neighbors[*].password",
+      "type": "string",
+      "required": false,
+      "secret": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "routing ospf area \u003cid\u003e auth-key",
+      "config_path": "routing.ospf.areas[*].auth_key",
+      "type": "string",
+      "required": false,
+      "secret": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "routing ospf enabled",
+      "config_path": "routing.ospf.enabled",
+      "type": "boolean",
+      "default": false,
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "routing vrf \u003cname\u003e",
+      "config_path": "routing.vrfs[*].name",
+      "type": "string",
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "security 2fa enforce-admins",
+      "config_path": "security.two_factor.enforce_for_admins",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "rbac": "superadmin",
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "security bruteforce enabled",
+      "config_path": "security.bruteforce.enabled",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "security rbac enforce",
+      "config_path": "security.rbac.enforce",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "rbac": "superadmin",
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "switching lldp enabled",
+      "config_path": "switching.lldp.enabled",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "system domain-name",
+      "config_path": "system.domain_name",
+      "type": "string",
+      "default": "local.daiji",
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system hostname",
+      "config_path": "system.hostname",
+      "type": "string",
+      "format": "hostname",
+      "default": "daiji-router",
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system login-banner",
+      "config_path": "system.motd_banner",
+      "type": "string",
+      "default": "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)",
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system ntp server",
+      "config_path": "system.ntp_servers",
+      "type": "array",
+      "required": false,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "system schema-version",
+      "config_path": "schema_version",
+      "type": "string",
+      "format": "semver",
+      "default": "1.4.0",
+      "required": true,
+      "impact": "none",
+      "description": "Schema semantic version used for backward-compatible migrations."
+    },
+    {
+      "cli_path": "system timezone",
+      "config_path": "system.timezone",
+      "type": "string",
+      "default": "UTC",
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system update auto-check",
+      "config_path": "updates.auto_check",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system update channel",
+      "config_path": "updates.channel",
+      "type": "string",
+      "enum": [
+        "stable",
+        "lts",
+        "beta"
+      ],
+      "default": "stable",
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system update health-timeout",
+      "config_path": "updates.confirm_timeout_sec",
+      "type": "integer",
+      "default": 180,
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system update require-signature",
+      "config_path": "updates.require_signature",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "rbac": "superadmin",
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system users \u003cusername\u003e",
+      "config_path": "system.users[*].username",
+      "type": "string",
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system users \u003cusername\u003e enabled",
+      "config_path": "system.users[*].enabled",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system users \u003cusername\u003e mfa-required",
+      "config_path": "system.users[*].mfa_required",
+      "type": "boolean",
+      "default": false,
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system users \u003cusername\u003e password-hash",
+      "config_path": "system.users[*].password_hash",
+      "type": "string",
+      "required": false,
+      "secret": true,
+      "rbac": "superadmin",
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system users \u003cusername\u003e role",
+      "config_path": "system.users[*].role",
+      "type": "string",
+      "enum": [
+        "superadmin",
+        "netadmin",
+        "operator",
+        "auditor",
+        "readonly"
+      ],
+      "default": "readonly",
+      "required": true,
+      "rbac": "superadmin",
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system users \u003cusername\u003e ssh-key",
+      "config_path": "system.users[*].ssh_authorized_keys",
+      "type": "array",
+      "required": false,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system watchdog enabled",
+      "config_path": "system.watchdog.enabled",
+      "type": "boolean",
+      "default": true,
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system watchdog max-failed-boots",
+      "config_path": "system.watchdog.max_failed_boots",
+      "type": "integer",
+      "default": 3,
+      "required": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "system watchdog timeout",
+      "config_path": "system.watchdog.timeout_sec",
+      "type": "integer",
+      "default": 30,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "vpn wireguard \u003ciface\u003e private-key",
+      "config_path": "vpn.wireguard[*].private_key",
+      "type": "string",
+      "required": true,
+      "secret": true,
+      "impact": "hot-reload"
+    },
+    {
+      "cli_path": "wireless controller enabled",
+      "config_path": "wireless.controller.enabled",
+      "type": "boolean",
+      "default": false,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "wireless mesh enabled",
+      "config_path": "wireless.mesh.enabled",
+      "type": "boolean",
+      "default": false,
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "wireless ssid \u003cname\u003e",
+      "config_path": "wireless.ssids[*].ssid",
+      "type": "string",
+      "required": true,
+      "impact": "service-restart"
+    },
+    {
+      "cli_path": "wireless ssid \u003cname\u003e passphrase",
+      "config_path": "wireless.ssids[*].passphrase",
+      "type": "string",
+      "required": false,
+      "secret": true,
+      "impact": "service-restart"
+    }
+  ],
+  "path_count": 942,
+  "paths": [
+    {
+      "dot_path": "automation",
+      "type": "object",
+      "children": [
+        "event_hooks",
+        "schedules",
+        "scripts",
+        "webhooks"
+      ]
+    },
+    {
+      "dot_path": "automation.event_hooks",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "automation.event_hooks[*]",
+      "type": "object",
+      "children": [
+        "enabled",
+        "event",
+        "name",
+        "script_name",
+        "webhook_name"
+      ]
+    },
+    {
+      "dot_path": "automation.event_hooks[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "automation.event_hooks[*].event",
+      "type": "string",
+      "enum": [
+        "wan-up",
+        "wan-down",
+        "pppoe-up",
+        "pppoe-down",
+        "user-expired",
+        "config-commit",
+        "high-cpu"
+      ]
+    },
+    {
+      "dot_path": "automation.event_hooks[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "automation.event_hooks[*].script_name",
+      "type": "string"
+    },
+    {
+      "dot_path": "automation.event_hooks[*].webhook_name",
+      "type": "string"
+    },
+    {
+      "dot_path": "automation.schedules",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "automation.schedules[*]",
+      "type": "object",
+      "children": [
+        "enabled",
+        "interval_sec",
+        "name",
+        "script_name",
+        "start_on_boot"
+      ]
+    },
+    {
+      "dot_path": "automation.schedules[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "automation.schedules[*].interval_sec",
+      "type": "integer"
+    },
+    {
+      "dot_path": "automation.schedules[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "automation.schedules[*].script_name",
+      "type": "string"
+    },
+    {
+      "dot_path": "automation.schedules[*].start_on_boot",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "automation.scripts",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "automation.scripts[*]",
+      "type": "object",
+      "children": [
+        "enabled",
+        "name",
+        "permissions",
+        "source",
+        "timeout_ms"
+      ]
+    },
+    {
+      "dot_path": "automation.scripts[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "automation.scripts[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "automation.scripts[*].permissions",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "automation.scripts[*].permissions[*]",
+      "type": "string",
+      "enum": [
+        "read",
+        "write",
+        "net",
+        "diag"
+      ]
+    },
+    {
+      "dot_path": "automation.scripts[*].source",
+      "type": "string"
+    },
+    {
+      "dot_path": "automation.scripts[*].timeout_ms",
+      "type": "integer",
+      "default": 2000
+    },
+    {
+      "dot_path": "automation.webhooks",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "automation.webhooks[*]",
+      "type": "object",
+      "children": [
+        "enabled",
+        "events",
+        "name",
+        "retry_count",
+        "secret",
+        "timeout_ms",
+        "url"
+      ]
+    },
+    {
+      "dot_path": "automation.webhooks[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "automation.webhooks[*].events",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "automation.webhooks[*].events[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "automation.webhooks[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "automation.webhooks[*].retry_count",
+      "type": "integer",
+      "default": 2
+    },
+    {
+      "dot_path": "automation.webhooks[*].secret",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "automation.webhooks[*].timeout_ms",
+      "type": "integer",
+      "default": 5000
+    },
+    {
+      "dot_path": "automation.webhooks[*].url",
+      "type": "string",
+      "format": "uri"
+    },
+    {
+      "dot_path": "firewall",
+      "type": "object",
+      "children": [
+        "address_lists",
+        "conntrack",
+        "default_policy",
+        "filter_rules",
+        "l7_dpi",
+        "mangle_rules",
+        "nat_rules"
+      ]
+    },
+    {
+      "dot_path": "firewall.address_lists",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "firewall.address_lists[*]",
+      "type": "object",
+      "children": [
+        "entries",
+        "family",
+        "name"
+      ]
+    },
+    {
+      "dot_path": "firewall.address_lists[*].entries",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "firewall.address_lists[*].entries[*]",
+      "type": "object",
+      "children": [
+        "cidr",
+        "comment",
+        "timeout_sec"
+      ]
+    },
+    {
+      "dot_path": "firewall.address_lists[*].entries[*].cidr",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "firewall.address_lists[*].entries[*].comment",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.address_lists[*].entries[*].timeout_sec",
+      "type": "integer"
+    },
+    {
+      "dot_path": "firewall.address_lists[*].family",
+      "type": "string",
+      "enum": [
+        "ipv4",
+        "ipv6"
+      ],
+      "default": "ipv4"
+    },
+    {
+      "dot_path": "firewall.address_lists[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.conntrack",
+      "type": "object",
+      "children": [
+        "log_invalid",
+        "max_entries",
+        "syn_flood_protect",
+        "syn_rate_per_sec",
+        "tcp_established_timeout_sec",
+        "udp_timeout_sec"
+      ]
+    },
+    {
+      "dot_path": "firewall.conntrack.log_invalid",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "firewall.conntrack.max_entries",
+      "type": "integer",
+      "default": 262144
+    },
+    {
+      "dot_path": "firewall.conntrack.syn_flood_protect",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "firewall.conntrack.syn_rate_per_sec",
+      "type": "integer",
+      "default": 200
+    },
+    {
+      "dot_path": "firewall.conntrack.tcp_established_timeout_sec",
+      "type": "integer",
+      "default": 3600
+    },
+    {
+      "dot_path": "firewall.conntrack.udp_timeout_sec",
+      "type": "integer",
+      "default": 120
+    },
+    {
+      "dot_path": "firewall.default_policy",
+      "type": "object",
+      "children": [
+        "forward",
+        "input",
+        "output"
+      ]
+    },
+    {
+      "dot_path": "firewall.default_policy.forward",
+      "type": "string",
+      "enum": [
+        "accept",
+        "drop"
+      ],
+      "default": "drop"
+    },
+    {
+      "dot_path": "firewall.default_policy.input",
+      "type": "string",
+      "enum": [
+        "accept",
+        "drop"
+      ],
+      "default": "drop"
+    },
+    {
+      "dot_path": "firewall.default_policy.output",
+      "type": "string",
+      "enum": [
+        "accept",
+        "drop"
+      ],
+      "default": "accept"
+    },
+    {
+      "dot_path": "firewall.filter_rules",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "firewall.filter_rules[*]",
+      "type": "object",
+      "children": [
+        "action",
+        "chain",
+        "comment",
+        "conn_state",
+        "dst_ip",
+        "dst_list",
+        "dst_port",
+        "enabled",
+        "id",
+        "in_interface",
+        "l7_app",
+        "log",
+        "log_prefix",
+        "mark_match",
+        "order",
+        "out_interface",
+        "protocol",
+        "src_ip",
+        "src_list",
+        "src_port"
+      ]
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].action",
+      "type": "string",
+      "enum": [
+        "accept",
+        "drop",
+        "reject",
+        "log"
+      ]
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].chain",
+      "type": "string",
+      "enum": [
+        "input",
+        "forward",
+        "output"
+      ]
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].comment",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].conn_state",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].conn_state[*]",
+      "type": "string",
+      "enum": [
+        "new",
+        "established",
+        "related",
+        "invalid"
+      ]
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].dst_ip",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].dst_list",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].dst_port",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].id",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].in_interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].l7_app",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].log",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].log_prefix",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].mark_match",
+      "type": "integer"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].order",
+      "type": "integer"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].out_interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].protocol",
+      "type": "string",
+      "enum": [
+        "any",
+        "tcp",
+        "udp",
+        "icmp",
+        "icmpv6",
+        "gre",
+        "esp",
+        "ah"
+      ],
+      "default": "any"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].src_ip",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].src_list",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.filter_rules[*].src_port",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.l7_dpi",
+      "type": "object",
+      "children": [
+        "blocked_categories",
+        "custom_signatures",
+        "enabled",
+        "engine"
+      ]
+    },
+    {
+      "dot_path": "firewall.l7_dpi.blocked_categories",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "firewall.l7_dpi.blocked_categories[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.l7_dpi.custom_signatures",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "firewall.l7_dpi.custom_signatures[*]",
+      "type": "object",
+      "children": [
+        "action",
+        "mark",
+        "name",
+        "payload_regex",
+        "port_hints",
+        "protocol"
+      ]
+    },
+    {
+      "dot_path": "firewall.l7_dpi.custom_signatures[*].action",
+      "type": "string",
+      "enum": [
+        "mark",
+        "drop",
+        "log"
+      ]
+    },
+    {
+      "dot_path": "firewall.l7_dpi.custom_signatures[*].mark",
+      "type": "integer"
+    },
+    {
+      "dot_path": "firewall.l7_dpi.custom_signatures[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.l7_dpi.custom_signatures[*].payload_regex",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.l7_dpi.custom_signatures[*].port_hints",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "firewall.l7_dpi.custom_signatures[*].port_hints[*]",
+      "type": "integer"
+    },
+    {
+      "dot_path": "firewall.l7_dpi.custom_signatures[*].protocol",
+      "type": "string",
+      "enum": [
+        "tcp",
+        "udp",
+        "any"
+      ]
+    },
+    {
+      "dot_path": "firewall.l7_dpi.enabled",
+      "cli_path": "firewall dpi enabled",
+      "type": "boolean",
+      "default": false,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "firewall.l7_dpi.engine",
+      "type": "string",
+      "enum": [
+        "ndpi",
+        "nft-l7"
+      ],
+      "default": "nft-l7"
+    },
+    {
+      "dot_path": "firewall.mangle_rules",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "firewall.mangle_rules[*]",
+      "type": "object",
+      "children": [
+        "chain",
+        "dst_ip",
+        "dst_port",
+        "enabled",
+        "id",
+        "l7_app",
+        "mss_clamp_pmtu",
+        "order",
+        "protocol",
+        "set_dscp",
+        "set_mark",
+        "src_ip"
+      ]
+    },
+    {
+      "dot_path": "firewall.mangle_rules[*].chain",
+      "type": "string",
+      "enum": [
+        "prerouting",
+        "forward",
+        "postrouting",
+        "output"
+      ]
+    },
+    {
+      "dot_path": "firewall.mangle_rules[*].dst_ip",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "firewall.mangle_rules[*].dst_port",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.mangle_rules[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "firewall.mangle_rules[*].id",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.mangle_rules[*].l7_app",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.mangle_rules[*].mss_clamp_pmtu",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "firewall.mangle_rules[*].order",
+      "type": "integer"
+    },
+    {
+      "dot_path": "firewall.mangle_rules[*].protocol",
+      "type": "string",
+      "enum": [
+        "any",
+        "tcp",
+        "udp",
+        "icmp"
+      ],
+      "default": "any"
+    },
+    {
+      "dot_path": "firewall.mangle_rules[*].set_dscp",
+      "type": "integer"
+    },
+    {
+      "dot_path": "firewall.mangle_rules[*].set_mark",
+      "type": "integer"
+    },
+    {
+      "dot_path": "firewall.mangle_rules[*].src_ip",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "firewall.nat_rules",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "firewall.nat_rules[*]",
+      "type": "object",
+      "children": [
+        "comment",
+        "dst_ip",
+        "dst_port",
+        "enabled",
+        "id",
+        "in_interface",
+        "order",
+        "out_interface",
+        "protocol",
+        "src_ip",
+        "to_addresses",
+        "to_port",
+        "type"
+      ]
+    },
+    {
+      "dot_path": "firewall.nat_rules[*].comment",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.nat_rules[*].dst_ip",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "firewall.nat_rules[*].dst_port",
+      "type": "integer"
+    },
+    {
+      "dot_path": "firewall.nat_rules[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "firewall.nat_rules[*].id",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.nat_rules[*].in_interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.nat_rules[*].order",
+      "type": "integer"
+    },
+    {
+      "dot_path": "firewall.nat_rules[*].out_interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "firewall.nat_rules[*].protocol",
+      "type": "string",
+      "enum": [
+        "any",
+        "tcp",
+        "udp"
+      ],
+      "default": "any"
+    },
+    {
+      "dot_path": "firewall.nat_rules[*].src_ip",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "firewall.nat_rules[*].to_addresses",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "firewall.nat_rules[*].to_port",
+      "type": "integer"
+    },
+    {
+      "dot_path": "firewall.nat_rules[*].type",
+      "type": "string",
+      "enum": [
+        "masquerade",
+        "snat",
+        "dnat",
+        "redirect"
+      ]
+    },
+    {
+      "dot_path": "interfaces",
+      "type": "object",
+      "children": [
+        "bondings",
+        "bridges",
+        "physical",
+        "tunnels",
+        "veth",
+        "vlans",
+        "vrrp"
+      ]
+    },
+    {
+      "dot_path": "interfaces.bondings",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.bondings[*]",
+      "type": "object",
+      "children": [
+        "addresses",
+        "enabled",
+        "lacp_rate",
+        "members",
+        "mode",
+        "mtu",
+        "name",
+        "vrf",
+        "xmit_hash_policy"
+      ]
+    },
+    {
+      "dot_path": "interfaces.bondings[*].addresses",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.bondings[*].addresses[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "interfaces.bondings[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "interfaces.bondings[*].lacp_rate",
+      "type": "string",
+      "enum": [
+        "slow",
+        "fast"
+      ],
+      "default": "fast"
+    },
+    {
+      "dot_path": "interfaces.bondings[*].members",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.bondings[*].members[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.bondings[*].mode",
+      "type": "string",
+      "enum": [
+        "802.3ad",
+        "active-backup",
+        "balance-xor",
+        "balance-rr"
+      ],
+      "default": "802.3ad"
+    },
+    {
+      "dot_path": "interfaces.bondings[*].mtu",
+      "type": "integer",
+      "default": 1500
+    },
+    {
+      "dot_path": "interfaces.bondings[*].name",
+      "cli_path": "interfaces bonding \u003cname\u003e",
+      "type": "string",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.bondings[*].vrf",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.bondings[*].xmit_hash_policy",
+      "type": "string",
+      "enum": [
+        "layer2",
+        "layer2+3",
+        "layer3+4"
+      ],
+      "default": "layer3+4"
+    },
+    {
+      "dot_path": "interfaces.bridges",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.bridges[*]",
+      "type": "object",
+      "children": [
+        "addresses",
+        "enabled",
+        "igmp_snooping",
+        "mirror",
+        "mld_snooping",
+        "mtu",
+        "name",
+        "ports",
+        "stp_mode",
+        "stp_priority",
+        "vlan_filtering",
+        "vrf"
+      ]
+    },
+    {
+      "dot_path": "interfaces.bridges[*].addresses",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.bridges[*].addresses[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "interfaces.bridges[*].igmp_snooping",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "interfaces.bridges[*].mirror",
+      "type": "object",
+      "children": [
+        "dest_port",
+        "direction",
+        "enabled",
+        "source_ports"
+      ]
+    },
+    {
+      "dot_path": "interfaces.bridges[*].mirror.dest_port",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].mirror.direction",
+      "type": "string",
+      "enum": [
+        "ingress",
+        "egress",
+        "both"
+      ],
+      "default": "both"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].mirror.enabled",
+      "type": "boolean"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].mirror.source_ports",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.bridges[*].mirror.source_ports[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].mld_snooping",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "interfaces.bridges[*].mtu",
+      "type": "integer",
+      "default": 1500
+    },
+    {
+      "dot_path": "interfaces.bridges[*].name",
+      "cli_path": "interfaces bridge \u003cname\u003e",
+      "type": "string",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*]",
+      "type": "object",
+      "children": [
+        "bpdu_guard",
+        "edge_port",
+        "interface",
+        "port_security",
+        "pvid",
+        "storm_control",
+        "tagged_vids",
+        "untagged_vids"
+      ]
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].bpdu_guard",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].edge_port",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].port_security",
+      "type": "object",
+      "children": [
+        "enabled",
+        "max_macs",
+        "static_macs",
+        "violation_action"
+      ]
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].port_security.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].port_security.max_macs",
+      "type": "integer",
+      "default": 1
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].port_security.static_macs",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].port_security.static_macs[*]",
+      "type": "string",
+      "format": "mac"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].port_security.violation_action",
+      "type": "string",
+      "enum": [
+        "restrict",
+        "shutdown",
+        "protect"
+      ],
+      "default": "restrict"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].pvid",
+      "type": "integer",
+      "default": 1
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].storm_control",
+      "type": "object",
+      "children": [
+        "broadcast_pps",
+        "multicast_pps",
+        "unknown_unicast_pps"
+      ]
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].storm_control.broadcast_pps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].storm_control.multicast_pps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].storm_control.unknown_unicast_pps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].tagged_vids",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].tagged_vids[*]",
+      "type": "integer"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].untagged_vids",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.bridges[*].ports[*].untagged_vids[*]",
+      "type": "integer"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].stp_mode",
+      "cli_path": "interfaces bridge \u003cname\u003e stp-mode",
+      "type": "string",
+      "enum": [
+        "none",
+        "stp",
+        "rstp",
+        "mstp"
+      ],
+      "default": "rstp",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.bridges[*].stp_priority",
+      "type": "integer",
+      "default": 32768
+    },
+    {
+      "dot_path": "interfaces.bridges[*].vlan_filtering",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "interfaces.bridges[*].vrf",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.physical",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.physical[*]",
+      "type": "object",
+      "children": [
+        "addresses",
+        "description",
+        "duplex",
+        "enabled",
+        "mac_override",
+        "mtu",
+        "name",
+        "role",
+        "speed_mbps",
+        "vrf"
+      ]
+    },
+    {
+      "dot_path": "interfaces.physical[*].addresses",
+      "cli_path": "interfaces physical \u003cname\u003e address",
+      "type": "array",
+      "impact": "hot-reload",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.physical[*].addresses[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "interfaces.physical[*].description",
+      "cli_path": "interfaces physical \u003cname\u003e description",
+      "type": "string",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.physical[*].duplex",
+      "cli_path": "interfaces physical \u003cname\u003e duplex",
+      "type": "string",
+      "enum": [
+        "auto",
+        "full",
+        "half"
+      ],
+      "default": "auto",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.physical[*].enabled",
+      "cli_path": "interfaces physical \u003cname\u003e enabled",
+      "type": "boolean",
+      "default": true,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.physical[*].mac_override",
+      "cli_path": "interfaces physical \u003cname\u003e mac",
+      "type": "string",
+      "format": "mac",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.physical[*].mtu",
+      "cli_path": "interfaces physical \u003cname\u003e mtu",
+      "type": "integer",
+      "default": 1500,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.physical[*].name",
+      "cli_path": "interfaces physical \u003cname\u003e",
+      "type": "string",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.physical[*].role",
+      "cli_path": "interfaces physical \u003cname\u003e role",
+      "type": "string",
+      "enum": [
+        "mgmt",
+        "wan",
+        "lan",
+        "trunk",
+        "unassigned"
+      ],
+      "default": "unassigned",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.physical[*].speed_mbps",
+      "cli_path": "interfaces physical \u003cname\u003e speed",
+      "type": "integer",
+      "enum": [
+        "0",
+        "10",
+        "100",
+        "1000",
+        "2500",
+        "10000",
+        "25000",
+        "40000",
+        "100000"
+      ],
+      "default": 0,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.physical[*].vrf",
+      "cli_path": "interfaces physical \u003cname\u003e vrf",
+      "type": "string",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.tunnels",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.tunnels[*]",
+      "type": "object",
+      "children": [
+        "addresses",
+        "dev",
+        "dst_port",
+        "enabled",
+        "key",
+        "local_ip",
+        "mode",
+        "mtu",
+        "name",
+        "remote_ip",
+        "ttl",
+        "vni",
+        "vrf"
+      ]
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].addresses",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].addresses[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].dev",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].dst_port",
+      "type": "integer"
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].key",
+      "type": "integer"
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].local_ip",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].mode",
+      "type": "string",
+      "enum": [
+        "gre",
+        "gretap",
+        "ipip",
+        "ip6gre",
+        "vxlan",
+        "sit"
+      ]
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].mtu",
+      "type": "integer",
+      "default": 1500
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].remote_ip",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].ttl",
+      "type": "integer",
+      "default": 64
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].vni",
+      "type": "integer"
+    },
+    {
+      "dot_path": "interfaces.tunnels[*].vrf",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.veth",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.veth[*]",
+      "type": "object",
+      "children": [
+        "addresses",
+        "enabled",
+        "mtu",
+        "name",
+        "netns",
+        "peer",
+        "vrf"
+      ]
+    },
+    {
+      "dot_path": "interfaces.veth[*].addresses",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.veth[*].addresses[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "interfaces.veth[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "interfaces.veth[*].mtu",
+      "type": "integer",
+      "default": 1500
+    },
+    {
+      "dot_path": "interfaces.veth[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.veth[*].netns",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.veth[*].peer",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.veth[*].vrf",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.vlans",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.vlans[*]",
+      "type": "object",
+      "children": [
+        "addresses",
+        "enabled",
+        "mtu",
+        "name",
+        "parent",
+        "protocol",
+        "qinq_inner_vid",
+        "vid",
+        "vrf"
+      ]
+    },
+    {
+      "dot_path": "interfaces.vlans[*].addresses",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.vlans[*].addresses[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "interfaces.vlans[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "interfaces.vlans[*].mtu",
+      "type": "integer",
+      "default": 1500
+    },
+    {
+      "dot_path": "interfaces.vlans[*].name",
+      "cli_path": "interfaces vlan \u003cname\u003e",
+      "type": "string",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.vlans[*].parent",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.vlans[*].protocol",
+      "cli_path": "interfaces vlan \u003cname\u003e protocol",
+      "type": "string",
+      "enum": [
+        "802.1q",
+        "802.1ad"
+      ],
+      "default": "802.1q",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.vlans[*].qinq_inner_vid",
+      "type": "integer"
+    },
+    {
+      "dot_path": "interfaces.vlans[*].vid",
+      "cli_path": "interfaces vlan \u003cname\u003e vid",
+      "type": "integer",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "interfaces.vlans[*].vrf",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.vrrp",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.vrrp[*]",
+      "type": "object",
+      "children": [
+        "advert_int_ms",
+        "auth_secret",
+        "auth_type",
+        "enabled",
+        "interface",
+        "name",
+        "preempt",
+        "priority",
+        "track_interfaces",
+        "virtual_ips",
+        "vrid"
+      ]
+    },
+    {
+      "dot_path": "interfaces.vrrp[*].advert_int_ms",
+      "type": "integer",
+      "default": 1000
+    },
+    {
+      "dot_path": "interfaces.vrrp[*].auth_secret",
+      "cli_path": "interfaces vrrp \u003cname\u003e auth-secret",
+      "type": "string",
+      "secret": true,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "interfaces.vrrp[*].auth_type",
+      "type": "string",
+      "enum": [
+        "none",
+        "pass"
+      ],
+      "default": "none"
+    },
+    {
+      "dot_path": "interfaces.vrrp[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "interfaces.vrrp[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.vrrp[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.vrrp[*].preempt",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "interfaces.vrrp[*].priority",
+      "type": "integer",
+      "default": 100
+    },
+    {
+      "dot_path": "interfaces.vrrp[*].track_interfaces",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.vrrp[*].track_interfaces[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "interfaces.vrrp[*].virtual_ips",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "interfaces.vrrp[*].virtual_ips[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "interfaces.vrrp[*].vrid",
+      "type": "integer"
+    },
+    {
+      "dot_path": "ip",
+      "type": "object",
+      "children": [
+        "arp_proxy",
+        "arp_static",
+        "dhcp",
+        "dns",
+        "ipv4_forward",
+        "ipv6_forward",
+        "nd_proxy",
+        "ntp",
+        "rp_filter"
+      ]
+    },
+    {
+      "dot_path": "ip.arp_proxy",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "ip.arp_static",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "ip.arp_static[*]",
+      "type": "object",
+      "children": [
+        "interface",
+        "ip",
+        "mac"
+      ]
+    },
+    {
+      "dot_path": "ip.arp_static[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "ip.arp_static[*].ip",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "ip.arp_static[*].mac",
+      "type": "string",
+      "format": "mac"
+    },
+    {
+      "dot_path": "ip.dhcp",
+      "type": "object",
+      "children": [
+        "clients",
+        "relays",
+        "servers"
+      ]
+    },
+    {
+      "dot_path": "ip.dhcp.clients",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "ip.dhcp.clients[*]",
+      "type": "object",
+      "children": [
+        "default_route_metric",
+        "dhcpv4",
+        "dhcpv6_pd",
+        "interface",
+        "use_peer_dns"
+      ]
+    },
+    {
+      "dot_path": "ip.dhcp.clients[*].default_route_metric",
+      "type": "integer",
+      "default": 100
+    },
+    {
+      "dot_path": "ip.dhcp.clients[*].dhcpv4",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "ip.dhcp.clients[*].dhcpv6_pd",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "ip.dhcp.clients[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "ip.dhcp.clients[*].use_peer_dns",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "ip.dhcp.relays",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "ip.dhcp.relays[*]",
+      "type": "object",
+      "children": [
+        "circuit_id",
+        "enabled",
+        "listen_interfaces",
+        "name",
+        "upstream_servers"
+      ]
+    },
+    {
+      "dot_path": "ip.dhcp.relays[*].circuit_id",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "ip.dhcp.relays[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "ip.dhcp.relays[*].listen_interfaces",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "ip.dhcp.relays[*].listen_interfaces[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "ip.dhcp.relays[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "ip.dhcp.relays[*].upstream_servers",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "ip.dhcp.relays[*].upstream_servers[*]",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "ip.dhcp.servers",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*]",
+      "type": "object",
+      "children": [
+        "dns_servers",
+        "domain_name",
+        "enabled",
+        "gateway",
+        "interface",
+        "lease_time_sec",
+        "name",
+        "range_end",
+        "range_start",
+        "static_leases",
+        "subnet"
+      ]
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].dns_servers",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].dns_servers[*]",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].domain_name",
+      "type": "string"
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].gateway",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].lease_time_sec",
+      "type": "integer",
+      "default": 86400
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].name",
+      "cli_path": "ip dhcp server \u003cname\u003e",
+      "type": "string",
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].range_end",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].range_start",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].static_leases",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].static_leases[*]",
+      "type": "object",
+      "children": [
+        "hostname",
+        "ip",
+        "mac"
+      ]
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].static_leases[*].hostname",
+      "type": "string"
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].static_leases[*].ip",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].static_leases[*].mac",
+      "type": "string",
+      "format": "mac"
+    },
+    {
+      "dot_path": "ip.dhcp.servers[*].subnet",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "ip.dns",
+      "type": "object",
+      "children": [
+        "cache_size",
+        "dnssec",
+        "enabled",
+        "listen_addresses",
+        "local_domain",
+        "port",
+        "static_hosts",
+        "upstreams"
+      ]
+    },
+    {
+      "dot_path": "ip.dns.cache_size",
+      "type": "integer",
+      "default": 4096
+    },
+    {
+      "dot_path": "ip.dns.dnssec",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "ip.dns.enabled",
+      "cli_path": "ip dns enabled",
+      "type": "boolean",
+      "default": true,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "ip.dns.listen_addresses",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "ip.dns.listen_addresses[*]",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "ip.dns.local_domain",
+      "type": "string"
+    },
+    {
+      "dot_path": "ip.dns.port",
+      "type": "integer",
+      "default": 53
+    },
+    {
+      "dot_path": "ip.dns.static_hosts",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "ip.dns.static_hosts[*]",
+      "type": "object",
+      "children": [
+        "hostname",
+        "ip"
+      ]
+    },
+    {
+      "dot_path": "ip.dns.static_hosts[*].hostname",
+      "type": "string",
+      "format": "hostname"
+    },
+    {
+      "dot_path": "ip.dns.static_hosts[*].ip",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "ip.dns.upstreams",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "ip.dns.upstreams[*]",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "ip.ipv4_forward",
+      "cli_path": "ip ipv4 forward",
+      "type": "boolean",
+      "default": true,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "ip.ipv6_forward",
+      "cli_path": "ip ipv6 forward",
+      "type": "boolean",
+      "default": true,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "ip.nd_proxy",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "ip.ntp",
+      "type": "object",
+      "children": [
+        "allow_subnets",
+        "enabled",
+        "server_mode",
+        "servers"
+      ]
+    },
+    {
+      "dot_path": "ip.ntp.allow_subnets",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "ip.ntp.allow_subnets[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "ip.ntp.enabled",
+      "cli_path": "ip ntp enabled",
+      "type": "boolean",
+      "default": true,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "ip.ntp.server_mode",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "ip.ntp.servers",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "ip.ntp.servers[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "ip.rp_filter",
+      "cli_path": "ip rp-filter",
+      "type": "integer",
+      "enum": [
+        "0",
+        "1",
+        "2"
+      ],
+      "default": 2,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "isp",
+      "type": "object",
+      "children": [
+        "hotspot",
+        "ip_pools",
+        "ipoe",
+        "multi_wan",
+        "pppoe",
+        "profiles",
+        "radius"
+      ]
+    },
+    {
+      "dot_path": "isp.hotspot",
+      "type": "object",
+      "children": [
+        "servers",
+        "vouchers"
+      ]
+    },
+    {
+      "dot_path": "isp.hotspot.servers",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*]",
+      "type": "object",
+      "children": [
+        "address_pool",
+        "default_profile",
+        "dns_name",
+        "enabled",
+        "interface",
+        "login_page_url",
+        "mac_cookie",
+        "name",
+        "trial_enabled",
+        "trial_uptime_sec",
+        "use_radius",
+        "walled_garden_cidrs",
+        "walled_garden_hosts"
+      ]
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].address_pool",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].default_profile",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].dns_name",
+      "type": "string",
+      "format": "hostname"
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].login_page_url",
+      "type": "string",
+      "format": "uri"
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].mac_cookie",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].trial_enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].trial_uptime_sec",
+      "type": "integer",
+      "default": 900
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].use_radius",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].walled_garden_cidrs",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].walled_garden_cidrs[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].walled_garden_hosts",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.hotspot.servers[*].walled_garden_hosts[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.hotspot.vouchers",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.hotspot.vouchers[*]",
+      "type": "object",
+      "children": [
+        "code",
+        "data_limit_mb",
+        "disabled",
+        "expires_at",
+        "max_devices",
+        "profile",
+        "validity_sec"
+      ]
+    },
+    {
+      "dot_path": "isp.hotspot.vouchers[*].code",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.hotspot.vouchers[*].data_limit_mb",
+      "type": "integer"
+    },
+    {
+      "dot_path": "isp.hotspot.vouchers[*].disabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "isp.hotspot.vouchers[*].expires_at",
+      "type": "string",
+      "format": "date-time"
+    },
+    {
+      "dot_path": "isp.hotspot.vouchers[*].max_devices",
+      "type": "integer",
+      "default": 1
+    },
+    {
+      "dot_path": "isp.hotspot.vouchers[*].profile",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.hotspot.vouchers[*].validity_sec",
+      "type": "integer"
+    },
+    {
+      "dot_path": "isp.ip_pools",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.ip_pools[*]",
+      "type": "object",
+      "children": [
+        "name",
+        "next_pool",
+        "ranges"
+      ]
+    },
+    {
+      "dot_path": "isp.ip_pools[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.ip_pools[*].next_pool",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.ip_pools[*].ranges",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.ip_pools[*].ranges[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.ipoe",
+      "type": "object",
+      "children": [
+        "servers"
+      ]
+    },
+    {
+      "dot_path": "isp.ipoe.servers",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.ipoe.servers[*]",
+      "type": "object",
+      "children": [
+        "auth_mode",
+        "default_profile",
+        "enabled",
+        "interface",
+        "ip_pool",
+        "name",
+        "use_radius"
+      ]
+    },
+    {
+      "dot_path": "isp.ipoe.servers[*].auth_mode",
+      "type": "string",
+      "enum": [
+        "mac",
+        "circuit-id",
+        "option82",
+        "radius"
+      ],
+      "default": "mac"
+    },
+    {
+      "dot_path": "isp.ipoe.servers[*].default_profile",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.ipoe.servers[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "isp.ipoe.servers[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.ipoe.servers[*].ip_pool",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.ipoe.servers[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.ipoe.servers[*].use_radius",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "isp.multi_wan",
+      "type": "object",
+      "children": [
+        "enabled",
+        "mode",
+        "sticky_sessions",
+        "wans"
+      ]
+    },
+    {
+      "dot_path": "isp.multi_wan.enabled",
+      "cli_path": "isp multi-wan enabled",
+      "type": "boolean",
+      "default": false,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "isp.multi_wan.mode",
+      "type": "string",
+      "enum": [
+        "failover",
+        "load-balance-pcc",
+        "load-balance-ecmp"
+      ],
+      "default": "failover"
+    },
+    {
+      "dot_path": "isp.multi_wan.sticky_sessions",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "isp.multi_wan.wans",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*]",
+      "type": "object",
+      "children": [
+        "check_interval_sec",
+        "check_method",
+        "check_targets",
+        "check_timeout_ms",
+        "distance",
+        "enabled",
+        "fail_threshold",
+        "gateway",
+        "interface",
+        "name",
+        "recover_threshold",
+        "routing_table",
+        "weight"
+      ]
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].check_interval_sec",
+      "type": "integer",
+      "default": 5
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].check_method",
+      "type": "string",
+      "enum": [
+        "recursive",
+        "netwatch-icmp",
+        "http"
+      ],
+      "default": "recursive"
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].check_targets",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].check_targets[*]",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].check_timeout_ms",
+      "type": "integer",
+      "default": 1000
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].distance",
+      "type": "integer",
+      "default": 1
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].fail_threshold",
+      "type": "integer",
+      "default": 3
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].gateway",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].recover_threshold",
+      "type": "integer",
+      "default": 3
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].routing_table",
+      "type": "integer"
+    },
+    {
+      "dot_path": "isp.multi_wan.wans[*].weight",
+      "type": "integer",
+      "default": 1
+    },
+    {
+      "dot_path": "isp.pppoe",
+      "type": "object",
+      "children": [
+        "clients",
+        "secrets",
+        "servers"
+      ]
+    },
+    {
+      "dot_path": "isp.pppoe.clients",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.pppoe.clients[*]",
+      "type": "object",
+      "children": [
+        "default_route",
+        "distance",
+        "enabled",
+        "interface",
+        "mtu",
+        "name",
+        "password",
+        "service_name",
+        "use_peer_dns",
+        "username"
+      ]
+    },
+    {
+      "dot_path": "isp.pppoe.clients[*].default_route",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "isp.pppoe.clients[*].distance",
+      "type": "integer",
+      "default": 1
+    },
+    {
+      "dot_path": "isp.pppoe.clients[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "isp.pppoe.clients[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.pppoe.clients[*].mtu",
+      "type": "integer",
+      "default": 1492
+    },
+    {
+      "dot_path": "isp.pppoe.clients[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.pppoe.clients[*].password",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "isp.pppoe.clients[*].service_name",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.pppoe.clients[*].use_peer_dns",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "isp.pppoe.clients[*].username",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.pppoe.secrets",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.pppoe.secrets[*]",
+      "type": "object",
+      "children": [
+        "caller_mac",
+        "comment",
+        "disabled",
+        "expires_at",
+        "password",
+        "profile",
+        "service",
+        "static_ip",
+        "username"
+      ]
+    },
+    {
+      "dot_path": "isp.pppoe.secrets[*].caller_mac",
+      "type": "string",
+      "format": "mac"
+    },
+    {
+      "dot_path": "isp.pppoe.secrets[*].comment",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.pppoe.secrets[*].disabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "isp.pppoe.secrets[*].expires_at",
+      "type": "string",
+      "format": "date-time"
+    },
+    {
+      "dot_path": "isp.pppoe.secrets[*].password",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "isp.pppoe.secrets[*].profile",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.pppoe.secrets[*].service",
+      "type": "string",
+      "enum": [
+        "any",
+        "pppoe",
+        "ipoe",
+        "hotspot",
+        "l2tp"
+      ],
+      "default": "pppoe"
+    },
+    {
+      "dot_path": "isp.pppoe.secrets[*].static_ip",
+      "type": "string",
+      "format": "ipv4"
+    },
+    {
+      "dot_path": "isp.pppoe.secrets[*].username",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.pppoe.servers",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*]",
+      "type": "object",
+      "children": [
+        "ac_name",
+        "auth_methods",
+        "default_profile",
+        "enabled",
+        "interface",
+        "ip_pool",
+        "local_ip",
+        "mru",
+        "mtu",
+        "name",
+        "one_session_per_mac",
+        "service_name",
+        "session_limit",
+        "use_radius",
+        "vlan_id"
+      ]
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].ac_name",
+      "type": "string",
+      "default": "DaijiOS-BNG"
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].auth_methods",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].auth_methods[*]",
+      "type": "string",
+      "enum": [
+        "pap",
+        "chap",
+        "mschapv2"
+      ]
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].default_profile",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].ip_pool",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].local_ip",
+      "type": "string",
+      "format": "ipv4"
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].mru",
+      "type": "integer",
+      "default": 1492
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].mtu",
+      "type": "integer",
+      "default": 1492
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].one_session_per_mac",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].service_name",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].session_limit",
+      "type": "integer",
+      "default": 10000
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].use_radius",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "isp.pppoe.servers[*].vlan_id",
+      "type": "integer"
+    },
+    {
+      "dot_path": "isp.profiles",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.profiles[*]",
+      "type": "object",
+      "children": [
+        "address_pool",
+        "burst_download_kbps",
+        "burst_time_sec",
+        "burst_upload_kbps",
+        "dns_servers",
+        "download_kbps",
+        "expired_pool",
+        "expired_redirect_url",
+        "idle_timeout_sec",
+        "ipv6_pool",
+        "name",
+        "session_timeout_sec",
+        "shared_users",
+        "upload_kbps"
+      ]
+    },
+    {
+      "dot_path": "isp.profiles[*].address_pool",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.profiles[*].burst_download_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "isp.profiles[*].burst_time_sec",
+      "type": "integer",
+      "default": 8
+    },
+    {
+      "dot_path": "isp.profiles[*].burst_upload_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "isp.profiles[*].dns_servers",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.profiles[*].dns_servers[*]",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "isp.profiles[*].download_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "isp.profiles[*].expired_pool",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.profiles[*].expired_redirect_url",
+      "type": "string",
+      "format": "uri"
+    },
+    {
+      "dot_path": "isp.profiles[*].idle_timeout_sec",
+      "type": "integer"
+    },
+    {
+      "dot_path": "isp.profiles[*].ipv6_pool",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.profiles[*].name",
+      "cli_path": "isp profile \u003cname\u003e",
+      "type": "string",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "isp.profiles[*].session_timeout_sec",
+      "type": "integer"
+    },
+    {
+      "dot_path": "isp.profiles[*].shared_users",
+      "type": "integer",
+      "default": 1
+    },
+    {
+      "dot_path": "isp.profiles[*].upload_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "isp.radius",
+      "type": "object",
+      "children": [
+        "client",
+        "server"
+      ]
+    },
+    {
+      "dot_path": "isp.radius.client",
+      "type": "object",
+      "children": [
+        "coa_enabled",
+        "coa_port",
+        "coa_secret",
+        "enabled",
+        "nas_identifier",
+        "nas_ip",
+        "servers"
+      ]
+    },
+    {
+      "dot_path": "isp.radius.client.coa_enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "isp.radius.client.coa_port",
+      "type": "integer",
+      "default": 3799
+    },
+    {
+      "dot_path": "isp.radius.client.coa_secret",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "isp.radius.client.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "isp.radius.client.nas_identifier",
+      "type": "string",
+      "default": "daiji-nas-01"
+    },
+    {
+      "dot_path": "isp.radius.client.nas_ip",
+      "type": "string",
+      "format": "ipv4"
+    },
+    {
+      "dot_path": "isp.radius.client.servers",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.radius.client.servers[*]",
+      "type": "object",
+      "children": [
+        "acct_port",
+        "auth_port",
+        "host",
+        "name",
+        "priority",
+        "secret",
+        "timeout_sec"
+      ]
+    },
+    {
+      "dot_path": "isp.radius.client.servers[*].acct_port",
+      "type": "integer",
+      "default": 1813
+    },
+    {
+      "dot_path": "isp.radius.client.servers[*].auth_port",
+      "type": "integer",
+      "default": 1812
+    },
+    {
+      "dot_path": "isp.radius.client.servers[*].host",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "isp.radius.client.servers[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.radius.client.servers[*].priority",
+      "type": "integer",
+      "default": 1
+    },
+    {
+      "dot_path": "isp.radius.client.servers[*].secret",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "isp.radius.client.servers[*].timeout_sec",
+      "type": "integer",
+      "default": 3
+    },
+    {
+      "dot_path": "isp.radius.server",
+      "type": "object",
+      "children": [
+        "acct_port",
+        "auth_port",
+        "clients",
+        "enabled"
+      ]
+    },
+    {
+      "dot_path": "isp.radius.server.acct_port",
+      "type": "integer",
+      "default": 1813
+    },
+    {
+      "dot_path": "isp.radius.server.auth_port",
+      "type": "integer",
+      "default": 1812
+    },
+    {
+      "dot_path": "isp.radius.server.clients",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "isp.radius.server.clients[*]",
+      "type": "object",
+      "children": [
+        "cidr",
+        "name",
+        "secret"
+      ]
+    },
+    {
+      "dot_path": "isp.radius.server.clients[*].cidr",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "isp.radius.server.clients[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "isp.radius.server.clients[*].secret",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "isp.radius.server.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "management",
+      "type": "object",
+      "children": [
+        "api",
+        "cloud_link",
+        "daiweb",
+        "ssh"
+      ]
+    },
+    {
+      "dot_path": "management.api",
+      "type": "object",
+      "children": [
+        "enabled",
+        "port",
+        "signing_secret",
+        "tls_enabled"
+      ]
+    },
+    {
+      "dot_path": "management.api.enabled",
+      "cli_path": "management api enabled",
+      "type": "boolean",
+      "default": true,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "management.api.port",
+      "cli_path": "management api port",
+      "type": "integer",
+      "default": 8443,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "management.api.signing_secret",
+      "cli_path": "management api signing-secret",
+      "type": "string",
+      "secret": true,
+      "rbac": "superadmin",
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "management.api.tls_enabled",
+      "cli_path": "management api tls-enabled",
+      "type": "boolean",
+      "default": true,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "management.cloud_link",
+      "type": "object",
+      "children": [
+        "controller_url",
+        "enabled",
+        "enrollment_token"
+      ]
+    },
+    {
+      "dot_path": "management.cloud_link.controller_url",
+      "cli_path": "management cloud controller-url",
+      "type": "string",
+      "format": "uri",
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "management.cloud_link.enabled",
+      "cli_path": "management cloud enabled",
+      "type": "boolean",
+      "default": false,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "management.cloud_link.enrollment_token",
+      "cli_path": "management cloud enrollment-token",
+      "type": "string",
+      "secret": true,
+      "rbac": "superadmin",
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "management.daiweb",
+      "type": "object",
+      "children": [
+        "enabled",
+        "port",
+        "theme"
+      ]
+    },
+    {
+      "dot_path": "management.daiweb.enabled",
+      "cli_path": "management daiweb enabled",
+      "type": "boolean",
+      "default": true,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "management.daiweb.port",
+      "cli_path": "management daiweb port",
+      "type": "integer",
+      "default": 443,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "management.daiweb.theme",
+      "cli_path": "management daiweb theme",
+      "type": "string",
+      "enum": [
+        "daiji-dark",
+        "daiji-light",
+        "system"
+      ],
+      "default": "daiji-dark",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "management.ssh",
+      "type": "object",
+      "children": [
+        "enabled",
+        "listen_addresses",
+        "password_auth",
+        "port"
+      ]
+    },
+    {
+      "dot_path": "management.ssh.enabled",
+      "cli_path": "management ssh enabled",
+      "type": "boolean",
+      "default": true,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "management.ssh.listen_addresses",
+      "cli_path": "management ssh listen-address",
+      "type": "array",
+      "impact": "service-restart",
+      "is_array": true
+    },
+    {
+      "dot_path": "management.ssh.listen_addresses[*]",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "management.ssh.password_auth",
+      "cli_path": "management ssh password-auth",
+      "type": "boolean",
+      "default": false,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "management.ssh.port",
+      "cli_path": "management ssh port",
+      "type": "integer",
+      "default": 22,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "qos",
+      "type": "object",
+      "children": [
+        "interfaces",
+        "queue_trees",
+        "simple_queues"
+      ]
+    },
+    {
+      "dot_path": "qos.interfaces",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "qos.interfaces[*]",
+      "type": "object",
+      "children": [
+        "diffserv",
+        "download_kbps",
+        "interface",
+        "nat_mode",
+        "overhead_bytes",
+        "rtt_ms",
+        "scheduler",
+        "upload_kbps"
+      ]
+    },
+    {
+      "dot_path": "qos.interfaces[*].diffserv",
+      "type": "string",
+      "enum": [
+        "diffserv4",
+        "diffserv3",
+        "besteffort"
+      ],
+      "default": "diffserv4"
+    },
+    {
+      "dot_path": "qos.interfaces[*].download_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "qos.interfaces[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "qos.interfaces[*].nat_mode",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "qos.interfaces[*].overhead_bytes",
+      "type": "integer",
+      "default": 18
+    },
+    {
+      "dot_path": "qos.interfaces[*].rtt_ms",
+      "type": "integer",
+      "default": 100
+    },
+    {
+      "dot_path": "qos.interfaces[*].scheduler",
+      "type": "string",
+      "enum": [
+        "htb",
+        "cake",
+        "fq_codel"
+      ],
+      "default": "cake"
+    },
+    {
+      "dot_path": "qos.interfaces[*].upload_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "qos.queue_trees",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "qos.queue_trees[*]",
+      "type": "object",
+      "children": [
+        "burst_bytes",
+        "ceil_kbps",
+        "class_id",
+        "mark_match",
+        "name",
+        "parent_interface",
+        "priority",
+        "qdisc",
+        "rate_kbps"
+      ]
+    },
+    {
+      "dot_path": "qos.queue_trees[*].burst_bytes",
+      "type": "integer"
+    },
+    {
+      "dot_path": "qos.queue_trees[*].ceil_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "qos.queue_trees[*].class_id",
+      "type": "integer"
+    },
+    {
+      "dot_path": "qos.queue_trees[*].mark_match",
+      "type": "integer"
+    },
+    {
+      "dot_path": "qos.queue_trees[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "qos.queue_trees[*].parent_interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "qos.queue_trees[*].priority",
+      "type": "integer",
+      "default": 4
+    },
+    {
+      "dot_path": "qos.queue_trees[*].qdisc",
+      "type": "string",
+      "enum": [
+        "fq_codel",
+        "cake",
+        "sfq"
+      ],
+      "default": "fq_codel"
+    },
+    {
+      "dot_path": "qos.queue_trees[*].rate_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "qos.simple_queues",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "qos.simple_queues[*]",
+      "type": "object",
+      "children": [
+        "burst_download_kbps",
+        "burst_time_sec",
+        "burst_upload_kbps",
+        "enabled",
+        "interface",
+        "max_download_kbps",
+        "max_upload_kbps",
+        "name",
+        "pcq_mode",
+        "pcq_rate_kbps",
+        "target_cidr"
+      ]
+    },
+    {
+      "dot_path": "qos.simple_queues[*].burst_download_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "qos.simple_queues[*].burst_time_sec",
+      "type": "integer",
+      "default": 8
+    },
+    {
+      "dot_path": "qos.simple_queues[*].burst_upload_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "qos.simple_queues[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "qos.simple_queues[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "qos.simple_queues[*].max_download_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "qos.simple_queues[*].max_upload_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "qos.simple_queues[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "qos.simple_queues[*].pcq_mode",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "qos.simple_queues[*].pcq_rate_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "qos.simple_queues[*].target_cidr",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "routing",
+      "type": "object",
+      "children": [
+        "bfd",
+        "bgp",
+        "isis",
+        "mpls",
+        "ospf",
+        "ospfv3",
+        "policy_routes",
+        "rip",
+        "static_routes",
+        "vrfs"
+      ]
+    },
+    {
+      "dot_path": "routing.bfd",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.bfd[*]",
+      "type": "object",
+      "children": [
+        "detect_multiplier",
+        "echo_mode",
+        "interface",
+        "min_rx_ms",
+        "min_tx_ms",
+        "name",
+        "peer_ip",
+        "vrf"
+      ]
+    },
+    {
+      "dot_path": "routing.bfd[*].detect_multiplier",
+      "type": "integer",
+      "default": 3
+    },
+    {
+      "dot_path": "routing.bfd[*].echo_mode",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "routing.bfd[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.bfd[*].min_rx_ms",
+      "type": "integer",
+      "default": 300
+    },
+    {
+      "dot_path": "routing.bfd[*].min_tx_ms",
+      "type": "integer",
+      "default": 300
+    },
+    {
+      "dot_path": "routing.bfd[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.bfd[*].peer_ip",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "routing.bfd[*].vrf",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.bgp",
+      "type": "object",
+      "children": [
+        "asn",
+        "ecmp_max_paths",
+        "enabled",
+        "graceful_restart",
+        "neighbors",
+        "networks",
+        "prefix_lists",
+        "route_maps",
+        "router_id",
+        "vrf"
+      ]
+    },
+    {
+      "dot_path": "routing.bgp.asn",
+      "type": "integer"
+    },
+    {
+      "dot_path": "routing.bgp.ecmp_max_paths",
+      "type": "integer",
+      "default": 4
+    },
+    {
+      "dot_path": "routing.bgp.enabled",
+      "cli_path": "routing bgp enabled",
+      "type": "boolean",
+      "default": false,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "routing.bgp.graceful_restart",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "routing.bgp.neighbors",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.bgp.neighbors[*]",
+      "type": "object",
+      "children": [
+        "bfd",
+        "description",
+        "ebgp_multihop",
+        "password",
+        "peer_ip",
+        "remote_asn",
+        "route_map_in",
+        "route_map_out",
+        "send_community",
+        "soft_reconfig",
+        "update_source"
+      ]
+    },
+    {
+      "dot_path": "routing.bgp.neighbors[*].bfd",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "routing.bgp.neighbors[*].description",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.bgp.neighbors[*].ebgp_multihop",
+      "type": "integer"
+    },
+    {
+      "dot_path": "routing.bgp.neighbors[*].password",
+      "cli_path": "routing bgp neighbor \u003cpeer\u003e password",
+      "type": "string",
+      "secret": true,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "routing.bgp.neighbors[*].peer_ip",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "routing.bgp.neighbors[*].remote_asn",
+      "type": "integer"
+    },
+    {
+      "dot_path": "routing.bgp.neighbors[*].route_map_in",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.bgp.neighbors[*].route_map_out",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.bgp.neighbors[*].send_community",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "routing.bgp.neighbors[*].soft_reconfig",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "routing.bgp.neighbors[*].update_source",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.bgp.networks",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.bgp.networks[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "routing.bgp.prefix_lists",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.bgp.prefix_lists[*]",
+      "type": "object",
+      "children": [
+        "name",
+        "rules"
+      ]
+    },
+    {
+      "dot_path": "routing.bgp.prefix_lists[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.bgp.prefix_lists[*].rules",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.bgp.prefix_lists[*].rules[*]",
+      "type": "object",
+      "children": [
+        "action",
+        "ge",
+        "le",
+        "prefix",
+        "seq"
+      ]
+    },
+    {
+      "dot_path": "routing.bgp.prefix_lists[*].rules[*].action",
+      "type": "string",
+      "enum": [
+        "permit",
+        "deny"
+      ]
+    },
+    {
+      "dot_path": "routing.bgp.prefix_lists[*].rules[*].ge",
+      "type": "integer"
+    },
+    {
+      "dot_path": "routing.bgp.prefix_lists[*].rules[*].le",
+      "type": "integer"
+    },
+    {
+      "dot_path": "routing.bgp.prefix_lists[*].rules[*].prefix",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "routing.bgp.prefix_lists[*].rules[*].seq",
+      "type": "integer"
+    },
+    {
+      "dot_path": "routing.bgp.route_maps",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.bgp.route_maps[*]",
+      "type": "object",
+      "children": [
+        "entries",
+        "name"
+      ]
+    },
+    {
+      "dot_path": "routing.bgp.route_maps[*].entries",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.bgp.route_maps[*].entries[*]",
+      "type": "object",
+      "children": [
+        "action",
+        "match_community",
+        "match_prefix_list",
+        "seq",
+        "set_as_path_prepend",
+        "set_community",
+        "set_local_pref",
+        "set_med"
+      ]
+    },
+    {
+      "dot_path": "routing.bgp.route_maps[*].entries[*].action",
+      "type": "string",
+      "enum": [
+        "permit",
+        "deny"
+      ]
+    },
+    {
+      "dot_path": "routing.bgp.route_maps[*].entries[*].match_community",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.bgp.route_maps[*].entries[*].match_prefix_list",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.bgp.route_maps[*].entries[*].seq",
+      "type": "integer"
+    },
+    {
+      "dot_path": "routing.bgp.route_maps[*].entries[*].set_as_path_prepend",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.bgp.route_maps[*].entries[*].set_community",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.bgp.route_maps[*].entries[*].set_local_pref",
+      "type": "integer"
+    },
+    {
+      "dot_path": "routing.bgp.route_maps[*].entries[*].set_med",
+      "type": "integer"
+    },
+    {
+      "dot_path": "routing.bgp.route_maps[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.bgp.router_id",
+      "type": "string",
+      "format": "ipv4"
+    },
+    {
+      "dot_path": "routing.bgp.vrf",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.isis",
+      "type": "object",
+      "children": [
+        "enabled",
+        "interfaces",
+        "level",
+        "net_id",
+        "vrf"
+      ]
+    },
+    {
+      "dot_path": "routing.isis.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "routing.isis.interfaces",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.isis.interfaces[*]",
+      "type": "object",
+      "children": [
+        "bfd",
+        "metric",
+        "name",
+        "passive"
+      ]
+    },
+    {
+      "dot_path": "routing.isis.interfaces[*].bfd",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "routing.isis.interfaces[*].metric",
+      "type": "integer",
+      "default": 10
+    },
+    {
+      "dot_path": "routing.isis.interfaces[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.isis.interfaces[*].passive",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "routing.isis.level",
+      "type": "string",
+      "enum": [
+        "level-1",
+        "level-2-only",
+        "level-1-2"
+      ],
+      "default": "level-1-2"
+    },
+    {
+      "dot_path": "routing.isis.net_id",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.isis.vrf",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.mpls",
+      "type": "object",
+      "children": [
+        "enabled",
+        "label_range_max",
+        "label_range_min",
+        "ldp"
+      ]
+    },
+    {
+      "dot_path": "routing.mpls.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "routing.mpls.label_range_max",
+      "type": "integer",
+      "default": 1048575
+    },
+    {
+      "dot_path": "routing.mpls.label_range_min",
+      "type": "integer",
+      "default": 16
+    },
+    {
+      "dot_path": "routing.mpls.ldp",
+      "type": "object",
+      "children": [
+        "enabled",
+        "interfaces",
+        "router_id",
+        "transport_ip"
+      ]
+    },
+    {
+      "dot_path": "routing.mpls.ldp.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "routing.mpls.ldp.interfaces",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.mpls.ldp.interfaces[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.mpls.ldp.router_id",
+      "type": "string",
+      "format": "ipv4"
+    },
+    {
+      "dot_path": "routing.mpls.ldp.transport_ip",
+      "type": "string",
+      "format": "ipv4"
+    },
+    {
+      "dot_path": "routing.ospf",
+      "type": "object",
+      "children": [
+        "areas",
+        "bfd",
+        "default_originate",
+        "enabled",
+        "passive_interfaces",
+        "redistribute",
+        "router_id",
+        "vrf"
+      ]
+    },
+    {
+      "dot_path": "routing.ospf.areas",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.ospf.areas[*]",
+      "type": "object",
+      "children": [
+        "area_id",
+        "area_type",
+        "auth_key",
+        "auth_type",
+        "networks"
+      ]
+    },
+    {
+      "dot_path": "routing.ospf.areas[*].area_id",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.ospf.areas[*].area_type",
+      "type": "string",
+      "enum": [
+        "normal",
+        "stub",
+        "nssa"
+      ],
+      "default": "normal"
+    },
+    {
+      "dot_path": "routing.ospf.areas[*].auth_key",
+      "cli_path": "routing ospf area \u003cid\u003e auth-key",
+      "type": "string",
+      "secret": true,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "routing.ospf.areas[*].auth_type",
+      "type": "string",
+      "enum": [
+        "none",
+        "md5"
+      ],
+      "default": "none"
+    },
+    {
+      "dot_path": "routing.ospf.areas[*].networks",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.ospf.areas[*].networks[*]",
+      "type": "string",
+      "format": "cidr4"
+    },
+    {
+      "dot_path": "routing.ospf.bfd",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "routing.ospf.default_originate",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "routing.ospf.enabled",
+      "cli_path": "routing ospf enabled",
+      "type": "boolean",
+      "default": false,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "routing.ospf.passive_interfaces",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.ospf.passive_interfaces[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.ospf.redistribute",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.ospf.redistribute[*]",
+      "type": "string",
+      "enum": [
+        "connected",
+        "static",
+        "bgp",
+        "rip"
+      ]
+    },
+    {
+      "dot_path": "routing.ospf.router_id",
+      "type": "string",
+      "format": "ipv4"
+    },
+    {
+      "dot_path": "routing.ospf.vrf",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.ospfv3",
+      "type": "object",
+      "children": [
+        "areas",
+        "enabled",
+        "router_id",
+        "vrf"
+      ]
+    },
+    {
+      "dot_path": "routing.ospfv3.areas",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.ospfv3.areas[*]",
+      "type": "object",
+      "children": [
+        "area_id",
+        "interfaces"
+      ]
+    },
+    {
+      "dot_path": "routing.ospfv3.areas[*].area_id",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.ospfv3.areas[*].interfaces",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.ospfv3.areas[*].interfaces[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.ospfv3.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "routing.ospfv3.router_id",
+      "type": "string",
+      "format": "ipv4"
+    },
+    {
+      "dot_path": "routing.ospfv3.vrf",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.policy_routes",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.policy_routes[*]",
+      "type": "object",
+      "children": [
+        "action",
+        "dst_prefix",
+        "fwmark",
+        "in_interface",
+        "priority",
+        "src_prefix",
+        "table_id"
+      ]
+    },
+    {
+      "dot_path": "routing.policy_routes[*].action",
+      "type": "string",
+      "enum": [
+        "lookup",
+        "blackhole",
+        "unreachable"
+      ],
+      "default": "lookup"
+    },
+    {
+      "dot_path": "routing.policy_routes[*].dst_prefix",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "routing.policy_routes[*].fwmark",
+      "type": "integer"
+    },
+    {
+      "dot_path": "routing.policy_routes[*].in_interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.policy_routes[*].priority",
+      "type": "integer"
+    },
+    {
+      "dot_path": "routing.policy_routes[*].src_prefix",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "routing.policy_routes[*].table_id",
+      "type": "integer"
+    },
+    {
+      "dot_path": "routing.rip",
+      "type": "object",
+      "children": [
+        "enabled",
+        "networks",
+        "passive_interfaces",
+        "redistribute",
+        "version",
+        "vrf"
+      ]
+    },
+    {
+      "dot_path": "routing.rip.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "routing.rip.networks",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.rip.networks[*]",
+      "type": "string",
+      "format": "cidr4"
+    },
+    {
+      "dot_path": "routing.rip.passive_interfaces",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.rip.passive_interfaces[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.rip.redistribute",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.rip.redistribute[*]",
+      "type": "string",
+      "enum": [
+        "connected",
+        "static",
+        "ospf",
+        "bgp"
+      ]
+    },
+    {
+      "dot_path": "routing.rip.version",
+      "type": "integer",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "default": 2
+    },
+    {
+      "dot_path": "routing.rip.vrf",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.static_routes",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.static_routes[*]",
+      "type": "object",
+      "children": [
+        "distance",
+        "ecmp_hops",
+        "enabled",
+        "interface",
+        "next_hop",
+        "prefix",
+        "tag",
+        "vrf"
+      ]
+    },
+    {
+      "dot_path": "routing.static_routes[*].distance",
+      "type": "integer",
+      "default": 1
+    },
+    {
+      "dot_path": "routing.static_routes[*].ecmp_hops",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.static_routes[*].ecmp_hops[*]",
+      "type": "object",
+      "children": [
+        "interface",
+        "next_hop",
+        "weight"
+      ]
+    },
+    {
+      "dot_path": "routing.static_routes[*].ecmp_hops[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.static_routes[*].ecmp_hops[*].next_hop",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "routing.static_routes[*].ecmp_hops[*].weight",
+      "type": "integer",
+      "default": 1
+    },
+    {
+      "dot_path": "routing.static_routes[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "routing.static_routes[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.static_routes[*].next_hop",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "routing.static_routes[*].prefix",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "routing.static_routes[*].tag",
+      "type": "integer"
+    },
+    {
+      "dot_path": "routing.static_routes[*].vrf",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.vrfs",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.vrfs[*]",
+      "type": "object",
+      "children": [
+        "description",
+        "interfaces",
+        "name",
+        "rd",
+        "table_id"
+      ]
+    },
+    {
+      "dot_path": "routing.vrfs[*].description",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.vrfs[*].interfaces",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "routing.vrfs[*].interfaces[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.vrfs[*].name",
+      "cli_path": "routing vrf \u003cname\u003e",
+      "type": "string",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "routing.vrfs[*].rd",
+      "type": "string"
+    },
+    {
+      "dot_path": "routing.vrfs[*].table_id",
+      "type": "integer"
+    },
+    {
+      "dot_path": "schema_version",
+      "cli_path": "system schema-version",
+      "type": "string",
+      "format": "semver",
+      "default": "1.4.0",
+      "impact": "none",
+      "description": "Schema semantic version used for backward-compatible migrations."
+    },
+    {
+      "dot_path": "security",
+      "type": "object",
+      "children": [
+        "api_tokens",
+        "bruteforce",
+        "firmware_security",
+        "rbac",
+        "ssh_hardening",
+        "two_factor"
+      ]
+    },
+    {
+      "dot_path": "security.api_tokens",
+      "type": "object",
+      "children": [
+        "max_ttl_hours",
+        "require_scoped_permissions"
+      ]
+    },
+    {
+      "dot_path": "security.api_tokens.max_ttl_hours",
+      "type": "integer",
+      "default": 720
+    },
+    {
+      "dot_path": "security.api_tokens.require_scoped_permissions",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "security.bruteforce",
+      "type": "object",
+      "children": [
+        "api_max_attempts",
+        "api_window_sec",
+        "ban_duration_sec",
+        "enabled",
+        "ssh_max_attempts",
+        "ssh_window_sec",
+        "whitelist_cidrs"
+      ]
+    },
+    {
+      "dot_path": "security.bruteforce.api_max_attempts",
+      "type": "integer",
+      "default": 10
+    },
+    {
+      "dot_path": "security.bruteforce.api_window_sec",
+      "type": "integer",
+      "default": 300
+    },
+    {
+      "dot_path": "security.bruteforce.ban_duration_sec",
+      "type": "integer",
+      "default": 3600
+    },
+    {
+      "dot_path": "security.bruteforce.enabled",
+      "cli_path": "security bruteforce enabled",
+      "type": "boolean",
+      "default": true,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "security.bruteforce.ssh_max_attempts",
+      "type": "integer",
+      "default": 5
+    },
+    {
+      "dot_path": "security.bruteforce.ssh_window_sec",
+      "type": "integer",
+      "default": 300
+    },
+    {
+      "dot_path": "security.bruteforce.whitelist_cidrs",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "security.bruteforce.whitelist_cidrs[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "security.firmware_security",
+      "type": "object",
+      "children": [
+        "audit_log_immutable",
+        "require_signed_ab",
+        "require_signed_dpk",
+        "secure_boot_required"
+      ]
+    },
+    {
+      "dot_path": "security.firmware_security.audit_log_immutable",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "security.firmware_security.require_signed_ab",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "security.firmware_security.require_signed_dpk",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "security.firmware_security.secure_boot_required",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "security.rbac",
+      "type": "object",
+      "children": [
+        "default_role",
+        "enforce"
+      ]
+    },
+    {
+      "dot_path": "security.rbac.default_role",
+      "type": "string",
+      "enum": [
+        "readonly",
+        "operator"
+      ],
+      "default": "readonly"
+    },
+    {
+      "dot_path": "security.rbac.enforce",
+      "cli_path": "security rbac enforce",
+      "type": "boolean",
+      "default": true,
+      "rbac": "superadmin",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "security.ssh_hardening",
+      "type": "object",
+      "children": [
+        "allow_ciphers",
+        "allow_kex",
+        "idle_timeout_sec",
+        "max_auth_tries",
+        "permit_root_login"
+      ]
+    },
+    {
+      "dot_path": "security.ssh_hardening.allow_ciphers",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "security.ssh_hardening.allow_ciphers[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "security.ssh_hardening.allow_kex",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "security.ssh_hardening.allow_kex[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "security.ssh_hardening.idle_timeout_sec",
+      "type": "integer",
+      "default": 600
+    },
+    {
+      "dot_path": "security.ssh_hardening.max_auth_tries",
+      "type": "integer",
+      "default": 3
+    },
+    {
+      "dot_path": "security.ssh_hardening.permit_root_login",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "security.two_factor",
+      "type": "object",
+      "children": [
+        "enforce_for_admins",
+        "issuer",
+        "window_skew"
+      ]
+    },
+    {
+      "dot_path": "security.two_factor.enforce_for_admins",
+      "cli_path": "security 2fa enforce-admins",
+      "type": "boolean",
+      "default": true,
+      "rbac": "superadmin",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "security.two_factor.issuer",
+      "type": "string",
+      "default": "DaijiOS"
+    },
+    {
+      "dot_path": "security.two_factor.window_skew",
+      "type": "integer",
+      "default": 1
+    },
+    {
+      "dot_path": "switching",
+      "type": "object",
+      "children": [
+        "lldp"
+      ]
+    },
+    {
+      "dot_path": "switching.lldp",
+      "type": "object",
+      "children": [
+        "cdp_compat",
+        "enabled",
+        "interfaces",
+        "med_enabled",
+        "tx_hold",
+        "tx_interval_sec"
+      ]
+    },
+    {
+      "dot_path": "switching.lldp.cdp_compat",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "switching.lldp.enabled",
+      "cli_path": "switching lldp enabled",
+      "type": "boolean",
+      "default": true,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "switching.lldp.interfaces",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "switching.lldp.interfaces[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "switching.lldp.med_enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "switching.lldp.tx_hold",
+      "type": "integer",
+      "default": 4
+    },
+    {
+      "dot_path": "switching.lldp.tx_interval_sec",
+      "type": "integer",
+      "default": 30
+    },
+    {
+      "dot_path": "system",
+      "type": "object",
+      "children": [
+        "domain_name",
+        "hostname",
+        "motd_banner",
+        "ntp_servers",
+        "timezone",
+        "users",
+        "watchdog"
+      ]
+    },
+    {
+      "dot_path": "system.domain_name",
+      "cli_path": "system domain-name",
+      "type": "string",
+      "default": "local.daiji",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "system.hostname",
+      "cli_path": "system hostname",
+      "type": "string",
+      "format": "hostname",
+      "default": "daiji-router",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "system.motd_banner",
+      "cli_path": "system login-banner",
+      "type": "string",
+      "default": "DaijiOS — Ecosystem by kangpcode (Dhafa Nazula Permadi)",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "system.ntp_servers",
+      "cli_path": "system ntp server",
+      "type": "array",
+      "impact": "service-restart",
+      "is_array": true
+    },
+    {
+      "dot_path": "system.ntp_servers[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "system.timezone",
+      "cli_path": "system timezone",
+      "type": "string",
+      "default": "UTC",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "system.users",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "system.users[*]",
+      "type": "object",
+      "children": [
+        "enabled",
+        "mfa_required",
+        "password_hash",
+        "role",
+        "ssh_authorized_keys",
+        "username"
+      ]
+    },
+    {
+      "dot_path": "system.users[*].enabled",
+      "cli_path": "system users \u003cusername\u003e enabled",
+      "type": "boolean",
+      "default": true,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "system.users[*].mfa_required",
+      "cli_path": "system users \u003cusername\u003e mfa-required",
+      "type": "boolean",
+      "default": false,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "system.users[*].password_hash",
+      "cli_path": "system users \u003cusername\u003e password-hash",
+      "type": "string",
+      "secret": true,
+      "rbac": "superadmin",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "system.users[*].role",
+      "cli_path": "system users \u003cusername\u003e role",
+      "type": "string",
+      "enum": [
+        "superadmin",
+        "netadmin",
+        "operator",
+        "auditor",
+        "readonly"
+      ],
+      "default": "readonly",
+      "rbac": "superadmin",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "system.users[*].ssh_authorized_keys",
+      "cli_path": "system users \u003cusername\u003e ssh-key",
+      "type": "array",
+      "impact": "hot-reload",
+      "is_array": true
+    },
+    {
+      "dot_path": "system.users[*].ssh_authorized_keys[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "system.users[*].username",
+      "cli_path": "system users \u003cusername\u003e",
+      "type": "string",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "system.watchdog",
+      "type": "object",
+      "children": [
+        "enabled",
+        "max_failed_boots",
+        "timeout_sec"
+      ]
+    },
+    {
+      "dot_path": "system.watchdog.enabled",
+      "cli_path": "system watchdog enabled",
+      "type": "boolean",
+      "default": true,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "system.watchdog.max_failed_boots",
+      "cli_path": "system watchdog max-failed-boots",
+      "type": "integer",
+      "default": 3,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "system.watchdog.timeout_sec",
+      "cli_path": "system watchdog timeout",
+      "type": "integer",
+      "default": 30,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "telemetry",
+      "type": "object",
+      "children": [
+        "bandwidth_test",
+        "netflow",
+        "snmp",
+        "syslog"
+      ]
+    },
+    {
+      "dot_path": "telemetry.bandwidth_test",
+      "type": "object",
+      "children": [
+        "max_concurrent",
+        "port",
+        "require_auth",
+        "server_enabled"
+      ]
+    },
+    {
+      "dot_path": "telemetry.bandwidth_test.max_concurrent",
+      "type": "integer",
+      "default": 4
+    },
+    {
+      "dot_path": "telemetry.bandwidth_test.port",
+      "type": "integer",
+      "default": 2000
+    },
+    {
+      "dot_path": "telemetry.bandwidth_test.require_auth",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "telemetry.bandwidth_test.server_enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "telemetry.netflow",
+      "type": "object",
+      "children": [
+        "active_timeout_sec",
+        "collectors",
+        "enabled",
+        "sampling_rate",
+        "version"
+      ]
+    },
+    {
+      "dot_path": "telemetry.netflow.active_timeout_sec",
+      "type": "integer",
+      "default": 60
+    },
+    {
+      "dot_path": "telemetry.netflow.collectors",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "telemetry.netflow.collectors[*]",
+      "type": "object",
+      "children": [
+        "host",
+        "port"
+      ]
+    },
+    {
+      "dot_path": "telemetry.netflow.collectors[*].host",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "telemetry.netflow.collectors[*].port",
+      "type": "integer",
+      "default": 2055
+    },
+    {
+      "dot_path": "telemetry.netflow.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "telemetry.netflow.sampling_rate",
+      "type": "integer",
+      "default": 1
+    },
+    {
+      "dot_path": "telemetry.netflow.version",
+      "type": "string",
+      "enum": [
+        "netflow-v5",
+        "netflow-v9",
+        "ipfix"
+      ],
+      "default": "ipfix"
+    },
+    {
+      "dot_path": "telemetry.snmp",
+      "type": "object",
+      "children": [
+        "community_ro",
+        "community_rw",
+        "enabled",
+        "listen_address",
+        "port",
+        "sys_contact",
+        "sys_location",
+        "v3_users",
+        "version"
+      ]
+    },
+    {
+      "dot_path": "telemetry.snmp.community_ro",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "telemetry.snmp.community_rw",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "telemetry.snmp.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "telemetry.snmp.listen_address",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "telemetry.snmp.port",
+      "type": "integer",
+      "default": 161
+    },
+    {
+      "dot_path": "telemetry.snmp.sys_contact",
+      "type": "string"
+    },
+    {
+      "dot_path": "telemetry.snmp.sys_location",
+      "type": "string"
+    },
+    {
+      "dot_path": "telemetry.snmp.v3_users",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "telemetry.snmp.v3_users[*]",
+      "type": "object",
+      "children": [
+        "auth_pass",
+        "auth_proto",
+        "priv_pass",
+        "priv_proto",
+        "username"
+      ]
+    },
+    {
+      "dot_path": "telemetry.snmp.v3_users[*].auth_pass",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "telemetry.snmp.v3_users[*].auth_proto",
+      "type": "string",
+      "enum": [
+        "sha256",
+        "sha512"
+      ],
+      "default": "sha256"
+    },
+    {
+      "dot_path": "telemetry.snmp.v3_users[*].priv_pass",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "telemetry.snmp.v3_users[*].priv_proto",
+      "type": "string",
+      "enum": [
+        "aes128"
+      ],
+      "default": "aes128"
+    },
+    {
+      "dot_path": "telemetry.snmp.v3_users[*].username",
+      "type": "string"
+    },
+    {
+      "dot_path": "telemetry.snmp.version",
+      "type": "string",
+      "enum": [
+        "v1",
+        "v2c",
+        "v3"
+      ],
+      "default": "v3"
+    },
+    {
+      "dot_path": "telemetry.syslog",
+      "type": "object",
+      "children": [
+        "enabled",
+        "local_buffer_lines",
+        "remote_targets"
+      ]
+    },
+    {
+      "dot_path": "telemetry.syslog.enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "telemetry.syslog.local_buffer_lines",
+      "type": "integer",
+      "default": 5000
+    },
+    {
+      "dot_path": "telemetry.syslog.remote_targets",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "telemetry.syslog.remote_targets[*]",
+      "type": "object",
+      "children": [
+        "host",
+        "min_severity",
+        "port",
+        "proto"
+      ]
+    },
+    {
+      "dot_path": "telemetry.syslog.remote_targets[*].host",
+      "type": "string"
+    },
+    {
+      "dot_path": "telemetry.syslog.remote_targets[*].min_severity",
+      "type": "string",
+      "enum": [
+        "debug",
+        "info",
+        "notice",
+        "warning",
+        "err",
+        "crit"
+      ],
+      "default": "info"
+    },
+    {
+      "dot_path": "telemetry.syslog.remote_targets[*].port",
+      "type": "integer",
+      "default": 514
+    },
+    {
+      "dot_path": "telemetry.syslog.remote_targets[*].proto",
+      "type": "string",
+      "enum": [
+        "udp",
+        "tcp",
+        "tls"
+      ],
+      "default": "tcp"
+    },
+    {
+      "dot_path": "updates",
+      "type": "object",
+      "children": [
+        "auto_check",
+        "channel",
+        "confirm_timeout_sec",
+        "require_signature"
+      ]
+    },
+    {
+      "dot_path": "updates.auto_check",
+      "cli_path": "system update auto-check",
+      "type": "boolean",
+      "default": true,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "updates.channel",
+      "cli_path": "system update channel",
+      "type": "string",
+      "enum": [
+        "stable",
+        "lts",
+        "beta"
+      ],
+      "default": "stable",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "updates.confirm_timeout_sec",
+      "cli_path": "system update health-timeout",
+      "type": "integer",
+      "default": 180,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "updates.require_signature",
+      "cli_path": "system update require-signature",
+      "type": "boolean",
+      "default": true,
+      "rbac": "superadmin",
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "vpn",
+      "type": "object",
+      "children": [
+        "eoip",
+        "ipsec",
+        "l2tp",
+        "openvpn",
+        "pptp",
+        "sstp",
+        "wireguard"
+      ]
+    },
+    {
+      "dot_path": "vpn.eoip",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "vpn.eoip[*]",
+      "type": "object",
+      "children": [
+        "bridge",
+        "enabled",
+        "local_ip",
+        "mtu",
+        "name",
+        "remote_ip",
+        "tunnel_id"
+      ]
+    },
+    {
+      "dot_path": "vpn.eoip[*].bridge",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.eoip[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "vpn.eoip[*].local_ip",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "vpn.eoip[*].mtu",
+      "type": "integer",
+      "default": 1450
+    },
+    {
+      "dot_path": "vpn.eoip[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.eoip[*].remote_ip",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "vpn.eoip[*].tunnel_id",
+      "type": "integer"
+    },
+    {
+      "dot_path": "vpn.ipsec",
+      "type": "object",
+      "children": [
+        "charon_threads",
+        "enabled",
+        "tunnels"
+      ]
+    },
+    {
+      "dot_path": "vpn.ipsec.charon_threads",
+      "type": "integer",
+      "default": 4
+    },
+    {
+      "dot_path": "vpn.ipsec.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*]",
+      "type": "object",
+      "children": [
+        "auth_method",
+        "dpd_delay_sec",
+        "enabled",
+        "esp_proposals",
+        "ike_proposals",
+        "local_id",
+        "local_ip",
+        "local_ts",
+        "name",
+        "psk",
+        "remote_id",
+        "remote_ip",
+        "remote_ts",
+        "version",
+        "vti_interface",
+        "vti_key"
+      ]
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].auth_method",
+      "type": "string",
+      "enum": [
+        "psk",
+        "pubkey"
+      ],
+      "default": "psk"
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].dpd_delay_sec",
+      "type": "integer",
+      "default": 30
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].esp_proposals",
+      "type": "string",
+      "default": "aes256gcm16-ecp384"
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].ike_proposals",
+      "type": "string",
+      "default": "aes256gcm16-prfsha384-ecp384"
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].local_id",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].local_ip",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].local_ts",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].local_ts[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].psk",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].remote_id",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].remote_ip",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].remote_ts",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].remote_ts[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].version",
+      "type": "string",
+      "enum": [
+        "ikev2"
+      ],
+      "default": "ikev2"
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].vti_interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.ipsec.tunnels[*].vti_key",
+      "type": "integer"
+    },
+    {
+      "dot_path": "vpn.l2tp",
+      "type": "object",
+      "children": [
+        "client_pool",
+        "enabled",
+        "ipsec_psk",
+        "listen_ip",
+        "local_ip"
+      ]
+    },
+    {
+      "dot_path": "vpn.l2tp.client_pool",
+      "type": "string",
+      "format": "cidr4"
+    },
+    {
+      "dot_path": "vpn.l2tp.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "vpn.l2tp.ipsec_psk",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "vpn.l2tp.listen_ip",
+      "type": "string",
+      "format": "ipv4"
+    },
+    {
+      "dot_path": "vpn.l2tp.local_ip",
+      "type": "string",
+      "format": "ipv4"
+    },
+    {
+      "dot_path": "vpn.openvpn",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "vpn.openvpn[*]",
+      "type": "object",
+      "children": [
+        "ca_cert",
+        "cert",
+        "cipher",
+        "dev_type",
+        "enabled",
+        "name",
+        "port",
+        "private_key_path",
+        "proto",
+        "remote_host",
+        "role",
+        "subnet",
+        "tls_crypt_key"
+      ]
+    },
+    {
+      "dot_path": "vpn.openvpn[*].ca_cert",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.openvpn[*].cert",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.openvpn[*].cipher",
+      "type": "string",
+      "enum": [
+        "AES-256-GCM",
+        "CHACHA20-POLY1305"
+      ],
+      "default": "AES-256-GCM"
+    },
+    {
+      "dot_path": "vpn.openvpn[*].dev_type",
+      "type": "string",
+      "enum": [
+        "tun",
+        "tap"
+      ],
+      "default": "tun"
+    },
+    {
+      "dot_path": "vpn.openvpn[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "vpn.openvpn[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.openvpn[*].port",
+      "type": "integer",
+      "default": 1194
+    },
+    {
+      "dot_path": "vpn.openvpn[*].private_key_path",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.openvpn[*].proto",
+      "type": "string",
+      "enum": [
+        "udp",
+        "tcp"
+      ],
+      "default": "udp"
+    },
+    {
+      "dot_path": "vpn.openvpn[*].remote_host",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.openvpn[*].role",
+      "type": "string",
+      "enum": [
+        "server",
+        "client"
+      ]
+    },
+    {
+      "dot_path": "vpn.openvpn[*].subnet",
+      "type": "string",
+      "format": "cidr4"
+    },
+    {
+      "dot_path": "vpn.openvpn[*].tls_crypt_key",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "vpn.pptp",
+      "type": "object",
+      "children": [
+        "client_pool",
+        "enabled",
+        "legacy_acknowledged",
+        "local_ip",
+        "require_mppe128"
+      ]
+    },
+    {
+      "dot_path": "vpn.pptp.client_pool",
+      "type": "string",
+      "format": "cidr4"
+    },
+    {
+      "dot_path": "vpn.pptp.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "vpn.pptp.legacy_acknowledged",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "vpn.pptp.local_ip",
+      "type": "string",
+      "format": "ipv4"
+    },
+    {
+      "dot_path": "vpn.pptp.require_mppe128",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "vpn.sstp",
+      "type": "object",
+      "children": [
+        "cert_path",
+        "client_pool",
+        "enabled",
+        "listen_port",
+        "private_key_path"
+      ]
+    },
+    {
+      "dot_path": "vpn.sstp.cert_path",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.sstp.client_pool",
+      "type": "string",
+      "format": "cidr4"
+    },
+    {
+      "dot_path": "vpn.sstp.enabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "vpn.sstp.listen_port",
+      "type": "integer",
+      "default": 443
+    },
+    {
+      "dot_path": "vpn.sstp.private_key_path",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.wireguard",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "vpn.wireguard[*]",
+      "type": "object",
+      "children": [
+        "addresses",
+        "enabled",
+        "interface",
+        "listen_port",
+        "mtu",
+        "peers",
+        "private_key"
+      ]
+    },
+    {
+      "dot_path": "vpn.wireguard[*].addresses",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "vpn.wireguard[*].addresses[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "vpn.wireguard[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "vpn.wireguard[*].interface",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.wireguard[*].listen_port",
+      "type": "integer"
+    },
+    {
+      "dot_path": "vpn.wireguard[*].mtu",
+      "type": "integer",
+      "default": 1420
+    },
+    {
+      "dot_path": "vpn.wireguard[*].peers",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "vpn.wireguard[*].peers[*]",
+      "type": "object",
+      "children": [
+        "allowed_ips",
+        "endpoint",
+        "name",
+        "persistent_keepalive",
+        "preshared_key",
+        "public_key"
+      ]
+    },
+    {
+      "dot_path": "vpn.wireguard[*].peers[*].allowed_ips",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "vpn.wireguard[*].peers[*].allowed_ips[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "vpn.wireguard[*].peers[*].endpoint",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.wireguard[*].peers[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.wireguard[*].peers[*].persistent_keepalive",
+      "type": "integer",
+      "default": 25
+    },
+    {
+      "dot_path": "vpn.wireguard[*].peers[*].preshared_key",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "vpn.wireguard[*].peers[*].public_key",
+      "type": "string"
+    },
+    {
+      "dot_path": "vpn.wireguard[*].private_key",
+      "cli_path": "vpn wireguard \u003ciface\u003e private-key",
+      "type": "string",
+      "secret": true,
+      "impact": "hot-reload"
+    },
+    {
+      "dot_path": "wireless",
+      "type": "object",
+      "children": [
+        "ap_groups",
+        "aps",
+        "controller",
+        "mesh",
+        "rf_profiles",
+        "ssids"
+      ]
+    },
+    {
+      "dot_path": "wireless.ap_groups",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "wireless.ap_groups[*]",
+      "type": "object",
+      "children": [
+        "description",
+        "led_enabled",
+        "name",
+        "rf_profile",
+        "ssids",
+        "vlan_native"
+      ]
+    },
+    {
+      "dot_path": "wireless.ap_groups[*].description",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.ap_groups[*].led_enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "wireless.ap_groups[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.ap_groups[*].rf_profile",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.ap_groups[*].ssids",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "wireless.ap_groups[*].ssids[*]",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.ap_groups[*].vlan_native",
+      "type": "integer",
+      "default": 1
+    },
+    {
+      "dot_path": "wireless.aps",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "wireless.aps[*]",
+      "type": "object",
+      "children": [
+        "ap_group",
+        "enabled",
+        "mac",
+        "management_vlan",
+        "mesh_role",
+        "model",
+        "name",
+        "radio_2g_channel",
+        "radio_5g_channel",
+        "serial",
+        "static_ip",
+        "tx_power_2g_dbm",
+        "tx_power_5g_dbm"
+      ]
+    },
+    {
+      "dot_path": "wireless.aps[*].ap_group",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.aps[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "wireless.aps[*].mac",
+      "type": "string",
+      "format": "mac"
+    },
+    {
+      "dot_path": "wireless.aps[*].management_vlan",
+      "type": "integer"
+    },
+    {
+      "dot_path": "wireless.aps[*].mesh_role",
+      "type": "string",
+      "enum": [
+        "disabled",
+        "root",
+        "node"
+      ],
+      "default": "disabled"
+    },
+    {
+      "dot_path": "wireless.aps[*].model",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.aps[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.aps[*].radio_2g_channel",
+      "type": "integer",
+      "default": 0
+    },
+    {
+      "dot_path": "wireless.aps[*].radio_5g_channel",
+      "type": "integer",
+      "default": 0
+    },
+    {
+      "dot_path": "wireless.aps[*].serial",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.aps[*].static_ip",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "wireless.aps[*].tx_power_2g_dbm",
+      "type": "integer",
+      "default": 0
+    },
+    {
+      "dot_path": "wireless.aps[*].tx_power_5g_dbm",
+      "type": "integer",
+      "default": 0
+    },
+    {
+      "dot_path": "wireless.controller",
+      "type": "object",
+      "children": [
+        "ac_name",
+        "auto_adopt_policy",
+        "control_port",
+        "country_code",
+        "default_ap_group",
+        "dtls_enabled",
+        "enabled",
+        "listen_ip",
+        "mode",
+        "onboarding_token"
+      ]
+    },
+    {
+      "dot_path": "wireless.controller.ac_name",
+      "type": "string",
+      "default": "DaijiOS-AC"
+    },
+    {
+      "dot_path": "wireless.controller.auto_adopt_policy",
+      "type": "string",
+      "enum": [
+        "manual",
+        "whitelist",
+        "zero-touch-token"
+      ],
+      "default": "zero-touch-token"
+    },
+    {
+      "dot_path": "wireless.controller.control_port",
+      "type": "integer",
+      "default": 5246
+    },
+    {
+      "dot_path": "wireless.controller.country_code",
+      "type": "string",
+      "default": "ID"
+    },
+    {
+      "dot_path": "wireless.controller.default_ap_group",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.controller.dtls_enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "wireless.controller.enabled",
+      "cli_path": "wireless controller enabled",
+      "type": "boolean",
+      "default": false,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "wireless.controller.listen_ip",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "wireless.controller.mode",
+      "type": "string",
+      "enum": [
+        "local",
+        "hybrid",
+        "cloud"
+      ],
+      "default": "local"
+    },
+    {
+      "dot_path": "wireless.controller.onboarding_token",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "wireless.mesh",
+      "type": "object",
+      "children": [
+        "auto_heal",
+        "backhaul_band",
+        "enabled",
+        "max_hops",
+        "mesh_id",
+        "protocol",
+        "sae_password"
+      ]
+    },
+    {
+      "dot_path": "wireless.mesh.auto_heal",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "wireless.mesh.backhaul_band",
+      "type": "string",
+      "enum": [
+        "5ghz",
+        "6ghz"
+      ],
+      "default": "5ghz"
+    },
+    {
+      "dot_path": "wireless.mesh.enabled",
+      "cli_path": "wireless mesh enabled",
+      "type": "boolean",
+      "default": false,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "wireless.mesh.max_hops",
+      "type": "integer",
+      "default": 4
+    },
+    {
+      "dot_path": "wireless.mesh.mesh_id",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.mesh.protocol",
+      "type": "string",
+      "enum": [
+        "802.11s",
+        "daiji-easy-mesh"
+      ],
+      "default": "802.11s"
+    },
+    {
+      "dot_path": "wireless.mesh.sae_password",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "wireless.rf_profiles",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*]",
+      "type": "object",
+      "children": [
+        "auto_channel",
+        "auto_power",
+        "channel_width_2g",
+        "channel_width_5g",
+        "name"
+      ]
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].auto_channel",
+      "type": "object",
+      "children": [
+        "allowed_2g_channels",
+        "allowed_5g_channels",
+        "avoid_dfs",
+        "enabled",
+        "interval_min"
+      ]
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].auto_channel.allowed_2g_channels",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].auto_channel.allowed_2g_channels[*]",
+      "type": "integer"
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].auto_channel.allowed_5g_channels",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].auto_channel.allowed_5g_channels[*]",
+      "type": "integer"
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].auto_channel.avoid_dfs",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].auto_channel.enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].auto_channel.interval_min",
+      "type": "integer",
+      "default": 60
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].auto_power",
+      "type": "object",
+      "children": [
+        "enabled",
+        "max_tx_dbm",
+        "min_tx_dbm",
+        "target_coverage_rssi_dbm"
+      ]
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].auto_power.enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].auto_power.max_tx_dbm",
+      "type": "integer",
+      "default": 23
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].auto_power.min_tx_dbm",
+      "type": "integer",
+      "default": 10
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].auto_power.target_coverage_rssi_dbm",
+      "type": "integer",
+      "default": -68
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].channel_width_2g",
+      "type": "integer",
+      "enum": [
+        "20",
+        "40"
+      ],
+      "default": 20
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].channel_width_5g",
+      "type": "integer",
+      "enum": [
+        "20",
+        "40",
+        "80",
+        "160"
+      ],
+      "default": 80
+    },
+    {
+      "dot_path": "wireless.rf_profiles[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.ssids",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "wireless.ssids[*]",
+      "type": "object",
+      "children": [
+        "band",
+        "band_steering",
+        "bridge",
+        "enabled",
+        "guest_isolation",
+        "hidden",
+        "max_clients",
+        "name",
+        "passphrase",
+        "per_client_down_kbps",
+        "per_client_up_kbps",
+        "radius_port",
+        "radius_secret",
+        "radius_server",
+        "roaming",
+        "security_mode",
+        "ssid",
+        "vlan_id"
+      ]
+    },
+    {
+      "dot_path": "wireless.ssids[*].band",
+      "type": "string",
+      "enum": [
+        "2.4ghz",
+        "5ghz",
+        "6ghz",
+        "dual",
+        "tri"
+      ],
+      "default": "dual"
+    },
+    {
+      "dot_path": "wireless.ssids[*].band_steering",
+      "type": "object",
+      "children": [
+        "enabled",
+        "max_2g_rejects",
+        "prefer_5ghz_rssi_dbm"
+      ]
+    },
+    {
+      "dot_path": "wireless.ssids[*].band_steering.enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "wireless.ssids[*].band_steering.max_2g_rejects",
+      "type": "integer",
+      "default": 3
+    },
+    {
+      "dot_path": "wireless.ssids[*].band_steering.prefer_5ghz_rssi_dbm",
+      "type": "integer",
+      "default": -70
+    },
+    {
+      "dot_path": "wireless.ssids[*].bridge",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.ssids[*].enabled",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "wireless.ssids[*].guest_isolation",
+      "type": "object",
+      "children": [
+        "block_lan_cidrs",
+        "captive_portal_ref",
+        "client_isolation",
+        "l2_isolate"
+      ]
+    },
+    {
+      "dot_path": "wireless.ssids[*].guest_isolation.block_lan_cidrs",
+      "type": "array",
+      "is_array": true
+    },
+    {
+      "dot_path": "wireless.ssids[*].guest_isolation.block_lan_cidrs[*]",
+      "type": "string",
+      "format": "cidr"
+    },
+    {
+      "dot_path": "wireless.ssids[*].guest_isolation.captive_portal_ref",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.ssids[*].guest_isolation.client_isolation",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "wireless.ssids[*].guest_isolation.l2_isolate",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "wireless.ssids[*].hidden",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "wireless.ssids[*].max_clients",
+      "type": "integer",
+      "default": 128
+    },
+    {
+      "dot_path": "wireless.ssids[*].name",
+      "type": "string"
+    },
+    {
+      "dot_path": "wireless.ssids[*].passphrase",
+      "cli_path": "wireless ssid \u003cname\u003e passphrase",
+      "type": "string",
+      "secret": true,
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "wireless.ssids[*].per_client_down_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "wireless.ssids[*].per_client_up_kbps",
+      "type": "integer"
+    },
+    {
+      "dot_path": "wireless.ssids[*].radius_port",
+      "type": "integer",
+      "default": 1812
+    },
+    {
+      "dot_path": "wireless.ssids[*].radius_secret",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "wireless.ssids[*].radius_server",
+      "type": "string",
+      "format": "ip"
+    },
+    {
+      "dot_path": "wireless.ssids[*].roaming",
+      "type": "object",
+      "children": [
+        "dot11k",
+        "dot11r",
+        "dot11v",
+        "mobility_domain",
+        "r0kh_key"
+      ]
+    },
+    {
+      "dot_path": "wireless.ssids[*].roaming.dot11k",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "wireless.ssids[*].roaming.dot11r",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "dot_path": "wireless.ssids[*].roaming.dot11v",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "dot_path": "wireless.ssids[*].roaming.mobility_domain",
+      "type": "string",
+      "default": "4441"
+    },
+    {
+      "dot_path": "wireless.ssids[*].roaming.r0kh_key",
+      "type": "string",
+      "secret": true
+    },
+    {
+      "dot_path": "wireless.ssids[*].security_mode",
+      "type": "string",
+      "enum": [
+        "open",
+        "captive-portal",
+        "wpa2-psk",
+        "wpa3-sae",
+        "wpa2-wpa3-mixed",
+        "wpa2-enterprise",
+        "wpa3-enterprise"
+      ]
+    },
+    {
+      "dot_path": "wireless.ssids[*].ssid",
+      "cli_path": "wireless ssid \u003cname\u003e",
+      "type": "string",
+      "impact": "service-restart"
+    },
+    {
+      "dot_path": "wireless.ssids[*].vlan_id",
+      "type": "integer"
+    }
+  ]
+}
